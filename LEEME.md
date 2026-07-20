@@ -3,6 +3,15 @@
 App de control de cuentas del proyecto, construida sobre tu Excel `DINEROS_2026`
 (pestaña `Datos_App`). Un solo fichero, sin instalación.
 
+**Única fuente de datos: la pestaña `Datos_App`.** Es una tabla plana (Fecha, Mes,
+Tipo, Categoría, Quién, Importe, ID, Estado, Actualizado) sin límite de filas — el
+script la borra y reescribe entera cada vez, así que da igual si un mes tiene 5
+movimientos o 500. La pestaña `CUENTAS 2026` (el diseño manual con celdas combinadas
+y huecos fijos por mes) queda **descontinuada**: no la toca el script ni la app, y
+tiene un número de filas fijo por bloque que se puede quedar corto. Anota todo desde
+la app (Resumen ▸ Reportes ya calcula lo mismo, sin límite) y no sigas rellenando esa
+hoja a mano.
+
 ## Cómo abrirla
 - **Doble clic** en `index.html` → se abre en tu navegador. Ya trae tus 40 movimientos cargados.
 - O súbela a **GitHub Pages** (como el Live Manager) y la tenéis online en el móvil.
