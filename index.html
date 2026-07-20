@@ -432,6 +432,7 @@ function defaultState(){
       ],
       conciertos:[],           // próximos bolos {fecha,titulo,lugar,importe,estado}
       sync:{url:'https://script.google.com/macros/s/AKfycbyZtGOv9Xaabd-9t6bG1GVX1ld_Mw3J69tqQyUypEcuSODL7XRvgHJMbYeTKmWs0MVyGw/exec', token:'altillo-2026', last:''},
+      recentlyDeleted:[],      // ids borrados localmente, para que un pull no los resucite
       alarma:true, notif:false, snoozeHasta:''
     },
     ui:{ view:'resumen', month:'TODO', chartView:'mensual', theme:'dark' }
@@ -439,10 +440,8 @@ function defaultState(){
 }
 function todayISO(){return new Date().toISOString().slice(0,10);}
 function load(){
-  let raw=null;
-  try{raw=localStorage.getItem(STORE_KEY); if(raw){state=JSON.parse(raw); mergeDefaults();}}catch(e){}
+  try{const raw=localStorage.getItem(STORE_KEY); if(raw){state=JSON.parse(raw); mergeDefaults();}}catch(e){}
   if(!state) state=defaultState();
-  window.__freshInstall = !raw;
 }
 function mergeDefaults(){
   const d=defaultState();
@@ -452,6 +451,7 @@ function mergeDefaults(){
   if(!Array.isArray(state.transactions)) state.transactions=d.transactions;
   if(!Array.isArray(state.meta.conciertos)) state.meta.conciertos=[];
   if(!Array.isArray(state.meta.metas)) state.meta.metas=d.meta.metas;
+  if(!Array.isArray(state.meta.recentlyDeleted)) state.meta.recentlyDeleted=[];
 }
 function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){toast('No se pudo guardar en este navegador','err');}}
 
@@ -910,7 +910,7 @@ function viewBrokers(){
   <div class="card"><div class="h-row"><h3>Deudas pendientes con brokers</h3><button class="btn gold" onclick="openEntry('Deuda Broker')">+ Nueva deuda</button></div>${rows(pend)}</div>
   ${pagadas.length?`<div class="card" style="margin-top:16px"><div class="h-row"><h3>Historial de devoluciones</h3></div>${rows(pagadas)}</div>`:''}`;
 }
-function toggleBroker(id){const t=state.transactions.find(x=>x.id===id);if(!t)return;t.estado=t.estado==='Pagado'?'Pendiente':'Pagado';save();renderAll();toast(t.estado==='Pagado'?'Marcado como devuelto ✓':'Marcado como pendiente','ok');}
+function toggleBroker(id){const t=state.transactions.find(x=>x.id===id);if(!t)return;t.estado=t.estado==='Pagado'?'Pendiente':'Pagado';t.actualizado=Date.now();save();renderAll();toast(t.estado==='Pagado'?'Marcado como devuelto ✓':'Marcado como pendiente','ok');autoPush();}
 
 /* ================= MOVIMIENTOS ================= */
 function viewMovimientos(){
@@ -1019,7 +1019,7 @@ function viewDatos(){
         <button class="btn gold" onclick="pullFromDrive()">⬇ Traer de Drive</button>
         <button class="btn" onclick="pushToDrive()">⬆ Enviar a Drive</button>
       </div>
-      <p class="help" style="margin-top:10px"><span class="status-dot" style="background:${sy.url?'var(--green)':'var(--txt3)'}"></span>${sy.url?'Conectado':'Sin configurar'} · Última sincronización: ${lastSync}</p>
+      <p class="help" style="margin-top:10px"><span class="status-dot" style="background:${sy.url?'var(--green)':'var(--txt3)'}"></span>${sy.url?'Conectado · auto-actualiza cada ~90s y al volver a la pestaña':'Sin configurar'} · Última sincronización: ${lastSync}</p>
     </div>
 
     <div class="card">
@@ -1088,8 +1088,42 @@ function normalizeTx(t){
     quien: t.quien||t['Quién']||t.Quien||'Otro',
     importe: +(t.importe||t.Importe||0),
     id: (t.id||t.ID||Date.now()+''+Math.random()).toString(),
-    estado: t.estado||t.Estado||''
+    estado: t.estado||t.Estado||'',
+    actualizado: +(t.actualizado||t.Actualizado||0)
   };
+}
+/* Mezcla lo que hay en Drive con lo local sin nunca borrar nada local:
+   - movimientos que no existen en local se añaden (salvo que los hayas borrado tú mismo hace poco)
+   - movimientos que existen en ambos sitios se quedan con la versión más reciente (por 'actualizado')
+   Así David y Ariana pueden trabajar los dos a la vez sin que un push machaque los cambios del otro. */
+function mergeRemote(remoteTxs){
+  const deleted=new Set(state.meta.recentlyDeleted||[]);
+  const byId=new Map(state.transactions.map(t=>[t.id,t]));
+  let changed=0;
+  remoteTxs.forEach(rt=>{
+    if(deleted.has(rt.id)) return;
+    const lt=byId.get(rt.id);
+    if(!lt){ state.transactions.push(rt); byId.set(rt.id,rt); changed++; }
+    else if((rt.actualizado||0) > (lt.actualizado||0)){ Object.assign(lt, rt); changed++; }
+  });
+  return changed;
+}
+/* Trae de Drive en segundo plano y fusiona (no reemplaza). Se usa para el auto-refresco
+   periódico y antes de cada push, para no perder movimientos añadidos desde otro dispositivo. */
+async function syncPull(silent){
+  const {url,token}=state.meta.sync; if(!url) return false;
+  try{
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'token='+encodeURIComponent(token));
+    const j=await r.json();
+    if(j.ok&&Array.isArray(j.transactions)){
+      const n=mergeRemote(j.transactions.map(normalizeTx));
+      state.meta.sync.last=new Date().toISOString();
+      if(n>0){ save(); renderAll(); if(!silent) toast('Datos actualizados desde Drive ✓','ok'); }
+      else{ save(); if(!silent) toast('Ya estabas al día','ok'); }
+      return true;
+    }
+  }catch(e){ if(!silent) toast('No se pudo conectar. Revisa la URL/despliegue.','err'); }
+  return false;
 }
 
 /* ---------- IMPORT / EXPORT ---------- */
@@ -1193,10 +1227,10 @@ function saveEntry(){
   const estado = tipo==='Deuda Broker' ? (document.getElementById('fEstado').value) : '';
   if(editingId){
     const t=state.transactions.find(x=>x.id===editingId);
-    Object.assign(t,{fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,estado});
+    Object.assign(t,{fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,estado,actualizado:Date.now()});
     toast('Movimiento actualizado ✓','ok');
   }else{
-    state.transactions.push({fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,id:Date.now()+''+Math.floor(Math.random()*999),estado});
+    state.transactions.push({fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,id:Date.now()+''+Math.floor(Math.random()*999),estado,actualizado:Date.now()});
     toast('Movimiento añadido ✓','ok');
   }
   resetRelleno();           // cada anotación resetea el contador quincenal
@@ -1206,9 +1240,10 @@ function saveEntry(){
 function delTx(id){
   if(!confirm('¿Borrar este movimiento?'))return;
   state.transactions=state.transactions.filter(t=>t.id!==id);
+  state.meta.recentlyDeleted=(state.meta.recentlyDeleted||[]).concat(id).slice(-200);
   save();renderAll();toast('Movimiento borrado','info');autoPush();
 }
-function autoPush(){ if(state.meta.sync.url){ pushToDrive(); } }
+async function autoPush(){ if(!state.meta.sync.url) return; await syncPull(true); pushToDrive(); }
 
 /* ================= GRÁFICAS ================= */
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
@@ -1272,8 +1307,13 @@ function init(){
   go(state.ui.view||'resumen');
   document.querySelectorAll('.nav-group').forEach(g=>g.classList.add('open'));
   startReminderWatch();
-  // primera vez que se abre en este navegador: si ya hay conexión con Drive configurada, trae los datos reales
-  if(window.__freshInstall && state.meta.sync.url){ pullFromDrive(); }
+  // si hay conexión con Drive configurada: trae (fusiona) lo que haya cambiado, ahora y cada poco,
+  // así los movimientos que añada el otro aparecen solos sin tener que pulsar "Traer de Drive"
+  if(state.meta.sync.url){
+    syncPull(true);
+    setInterval(()=>{ if(state.meta.sync.url) syncPull(true); }, 90*1000);
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && state.meta.sync.url) syncPull(true); });
+  }
 }
 document.addEventListener('click',e=>{ // cerrar modales al pinchar fondo
   if(e.target.classList.contains('modal-bg')) e.target.classList.remove('show');
