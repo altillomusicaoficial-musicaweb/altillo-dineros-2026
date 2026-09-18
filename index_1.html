@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALTILLO · Dineros 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0b0f17; --bg2:#0d1220; --panel:#141a28; --panel2:#1a2233; --panel3:#202a3d;
+  --line:#26314a; --line2:#2f3c5a;
+  --txt:#e7ecf5; --txt2:#9aa7c2; --txt3:#6b7896;
+  --gold:#d9b25f; --gold2:#c79a45;
+  --green:#22c55e; --greend:#166b39; --red:#ef4759; --redd:#7a2330;
+  --purple:#a855f7; --amber:#f5a524; --blue:#3b82f6; --cyan:#22d3ee;
+  --carmesi:#C8102E;
+  --shadow:0 8px 30px rgba(0,0,0,.35); --radius:16px;
+}
+[data-theme="light"]{
+  --bg:#eef1f7; --bg2:#e6ebf4; --panel:#ffffff; --panel2:#f4f6fb; --panel3:#eef1f8;
+  --line:#dde3ef; --line2:#cdd6e8;
+  --txt:#151b28; --txt2:#4d5872; --txt3:#7a879f;
+  --gold:#b7893a; --gold2:#9c7126;
+  --shadow:0 8px 24px rgba(30,45,90,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Barlow',system-ui,-apple-system,sans-serif;
+  background:radial-gradient(1200px 600px at 15% -5%,rgba(217,178,95,.06),transparent 60%),var(--bg);
+  color:var(--txt); font-size:16px; line-height:1.4; -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+.mono{font-variant-numeric:tabular-nums}
+
+/* ---------- LAYOUT ---------- */
+.app{display:grid;grid-template-columns:238px 1fr;min-height:100vh}
+.sidebar{background:linear-gradient(180deg,var(--bg2),var(--bg));border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;padding:0 0 14px}
+.main{padding:22px 26px 40px;min-width:0}
+
+/* ---------- SIDEBAR ---------- */
+.brand{padding:24px 22px 18px;border-bottom:1px solid var(--line)}
+.brand h1{font-family:'Cinzel',serif;font-weight:700;font-size:30px;letter-spacing:3px;
+  background:linear-gradient(180deg,#f3d99a,var(--gold) 55%,var(--gold2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+.brand .sub{font-family:'Dancing Script',cursive;color:var(--txt3);font-size:16px;margin-top:2px}
+.nav{padding:14px 12px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:11px;color:var(--txt2);
+  font-weight:500;font-size:16px;transition:.14s;width:100%;text-align:left;position:relative}
+.nav-item:hover{background:var(--panel);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(217,178,95,.16),rgba(217,178,95,.03));color:var(--gold);font-weight:600}
+.nav-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--gold)}
+.nav-item .ic{width:20px;height:20px;flex:none;opacity:.9}
+.nav-group{margin-top:2px}
+.nav-sub{overflow:hidden;max-height:0;transition:max-height .22s ease}
+.nav-group.open .nav-sub{max-height:180px}
+.nav-sub .nav-item{padding-left:40px;font-size:15px}
+.nav-sub .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.nav-item .chev{margin-left:auto;transition:.2s;opacity:.6}
+.nav-group.open .chev{transform:rotate(180deg)}
+.nav-label{padding:16px 16px 6px;font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1.5px;
+  font-size:12.5px;color:var(--txt3);font-weight:600}
+
+/* status card bottom (sin imagen) */
+.side-card{margin:8px 12px 0;padding:14px;border-radius:14px;border:1px solid var(--line);
+  background:linear-gradient(160deg,var(--panel2),var(--panel))}
+.side-card .st-title{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:12.5px;color:var(--txt3)}
+.side-card .st-big{font-family:'Barlow Condensed';font-weight:700;font-size:23px;margin-top:3px;line-height:1.1}
+.side-card .st-sub{font-size:14px;color:var(--txt2);margin-top:2px}
+.side-card .st-bar{height:6px;border-radius:5px;background:var(--panel3);margin-top:10px;overflow:hidden}
+.side-card .st-bar i{display:block;height:100%;border-radius:5px;transition:.4s}
+.side-card button.mini{margin-top:11px;width:100%;padding:8px;border-radius:9px;font-weight:600;font-size:15px;
+  background:var(--gold);color:#1a1206}
+.side-card button.mini:hover{background:#e6c579}
+
+/* ---------- HEADER ---------- */
+.top{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.top h2{font-family:'Barlow Condensed';font-weight:700;font-size:31px;letter-spacing:.5px;text-transform:uppercase;line-height:1}
+.top .hsub{color:var(--txt2);font-size:15px;margin-top:3px}
+.top-controls{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ctl{display:flex;flex-direction:column;gap:4px}
+.ctl label{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:11.5px;color:var(--txt3)}
+.ctl select, .field select, .field input{background:var(--panel);border:1px solid var(--line);color:var(--txt);
+  padding:8px 12px;border-radius:10px;font-size:15px;font-weight:500;min-width:120px}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg button{padding:7px 13px;border-radius:8px;font-size:14px;font-weight:600;color:var(--txt2);display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--panel3);color:var(--txt)}
+.upd{text-align:right;font-size:12.5px;color:var(--txt3);line-height:1.35}
+.iconbtn{width:42px;height:42px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--txt2)}
+.iconbtn:hover{color:var(--gold);border-color:var(--gold)}
+
+/* reminder chip */
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;font-weight:600;font-size:14.5px;border:1px solid transparent}
+.chip .pt{width:8px;height:8px;border-radius:50%}
+.chip.ok{background:rgba(34,197,94,.12);color:#4ade80;border-color:rgba(34,197,94,.3)}
+.chip.warn{background:rgba(245,165,36,.14);color:var(--amber);border-color:rgba(245,165,36,.35)}
+.chip.late{background:rgba(239,71,89,.16);color:#ff7a88;border-color:rgba(239,71,89,.4);cursor:pointer}
+.chip.late .pt{animation:pulse 1.1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ---------- CARDS / GRID ---------- */
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:18px}
+@media(max-width:1400px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.kpis{grid-template-columns:1fr}}
+.card{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);min-width:0}
+.card h3{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1.2px;font-size:15px;font-weight:600;color:var(--txt);margin-bottom:2px}
+.card .h-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card .h-row .tot{font-size:14px;color:var(--txt3)}
+.card .h-row .tot b{color:var(--txt);font-family:'Barlow Condensed';font-size:18.5px;margin-left:5px}
+
+.kpi{position:relative;overflow:hidden}
+.kpi .kicon{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:13px}
+.kpi .klabel{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:13px;color:var(--txt2);font-weight:600}
+.kpi .kval{font-family:'Barlow Condensed';font-weight:700;font-size:34.5px;letter-spacing:.5px;margin:2px 0 5px;line-height:1}
+.kpi .kdelta{font-size:14px;font-weight:600}
+.kpi .kdelta.up{color:#4ade80}.kpi .kdelta.down{color:#ff7a88}.kpi .kdelta.flat{color:var(--txt3)}
+
+.layout-2{grid-template-columns:1.55fr 1fr}
+.layout-3{grid-template-columns:1.1fr 1.1fr 1fr}
+.layout-side{grid-template-columns:2fr 1fr}
+@media(max-width:1100px){.layout-2,.layout-3,.layout-side{grid-template-columns:1fr}}
+
+.chart-wrap{position:relative;height:270px}
+.chart-sm{position:relative;height:210px}
+.legend{display:flex;flex-direction:column;gap:10px;justify-content:center}
+.legend .li{display:flex;align-items:center;gap:9px;font-size:15px}
+.legend .li .sw{width:12px;height:12px;border-radius:4px;flex:none}
+.legend .li .nm{color:var(--txt2)}
+.legend .li .vl{margin-left:auto;font-weight:600;font-family:'Barlow Condensed';font-size:17.5px}
+
+.catrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.catrow:last-child{border-bottom:none}
+.catrow .nm{font-size:15.5px;color:var(--txt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.catrow .vl{font-family:'Barlow Condensed';font-weight:600;font-size:17.5px}
+.catrow .pc{font-size:12.5px;color:var(--txt3);width:38px;text-align:right}
+.catbar{height:5px;border-radius:4px;background:var(--panel3);flex:0 0 90px;overflow:hidden}
+.catbar i{display:block;height:100%;border-radius:4px}
+.tot-line{display:flex;justify-content:space-between;align-items:center;padding-top:13px;margin-top:5px;border-top:1.5px solid var(--line2)}
+.tot-line .tl{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:14px;color:var(--txt2);font-weight:600}
+.tot-line .tv{font-family:'Barlow Condensed';font-weight:700;font-size:22px}
+
+/* detail lists */
+.dlist .di{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)}
+.dlist .di:last-child{border-bottom:none}
+.dlist .di .dic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+.dlist .di .dn{flex:1;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlist .di .dq{font-size:12.5px;color:var(--txt3)}
+.dlist .di .dv{font-family:'Barlow Condensed';font-weight:600;font-size:17.5px}
+.dlist .di .dp{font-size:12.5px;color:var(--txt3);width:36px;text-align:right}
+
+/* mini stat */
+.ministat{padding:15px}
+.ministat .mtl{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:12.5px;color:var(--txt3);display:flex;align-items:center;gap:7px}
+.ministat .mv{font-family:'Barlow Condensed';font-weight:700;font-size:26.5px;margin:5px 0 2px}
+.ministat .ms{font-size:13px;color:var(--txt2)}
+.spark{height:34px;margin-top:8px}
+
+/* concerts */
+.evt{display:flex;gap:13px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.evt:last-child{border-bottom:none}
+.evt .date{width:46px;text-align:center;flex:none}
+.evt .date .d{font-family:'Barlow Condensed';font-weight:700;font-size:24px;line-height:1}
+.evt .date .m{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--txt3)}
+.evt .info{flex:1;min-width:0}
+.evt .info .t{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evt .info .p{font-size:14px;color:var(--txt3)}
+.evt .amt{text-align:right}
+.evt .amt .a{font-family:'Barlow Condensed';font-weight:700;font-size:18.5px}
+.badge{font-size:11.5px;padding:3px 8px;border-radius:6px;font-weight:600;display:inline-block;margin-top:3px}
+.badge.ok{background:rgba(34,197,94,.15);color:#4ade80}
+.badge.pend{background:rgba(245,165,36,.15);color:var(--amber)}
+
+/* resumen periodo */
+.resline{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.resline:last-child{border-bottom:none}
+.resline .ri{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+.resline .rn{flex:1;font-size:15px;color:var(--txt2)}
+.resline .rv{font-family:'Barlow Condensed';font-weight:700;font-size:22px}
+
+/* metas */
+.metarow{padding:12px 0;border-bottom:1px solid var(--line)}
+.metarow:last-child{border-bottom:none}
+.metarow .top{display:flex;justify-content:space-between;margin-bottom:7px;align-items:baseline}
+.metarow .mn{font-size:15.5px;font-weight:500}
+.metarow .mx{font-size:14px;color:var(--txt3)}
+.metarow .mx b{color:var(--txt);font-family:'Barlow Condensed';font-size:16px}
+.metarow .pct{font-family:'Barlow Condensed';font-weight:700;font-size:16px;margin-left:8px}
+.mbar{height:9px;border-radius:6px;background:var(--panel3);overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:6px;transition:.5s}
+
+/* tip */
+.tip{margin-top:18px;background:linear-gradient(90deg,rgba(168,85,247,.12),rgba(168,85,247,.02));
+  border:1px solid rgba(168,85,247,.25);border-radius:13px;padding:14px 18px;display:flex;gap:12px;align-items:center;font-size:15px;color:var(--txt2)}
+.tip .ti{width:26px;height:26px;border-radius:8px;background:rgba(168,85,247,.2);display:grid;place-items:center;color:var(--purple);flex:none}
+.tip b{color:var(--txt)}
+
+/* ---------- TABLE (movimientos) ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input[type=search]{flex:1;min-width:180px}
+.btn{padding:9px 15px;border-radius:10px;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);color:var(--txt)}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn.gold{background:var(--gold);color:#1a1206;border-color:var(--gold)}
+.btn.gold:hover{background:#e6c579;color:#1a1206}
+.btn.ghost{background:transparent}
+.btn.danger:hover{border-color:var(--red);color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+thead th{text-align:left;font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:12.5px;
+  color:var(--txt3);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--panel)}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line)}
+tbody tr:hover{background:var(--panel2)}
+.pill{font-size:12.5px;padding:3px 9px;border-radius:7px;font-weight:600;white-space:nowrap}
+.pill.ing{background:rgba(34,197,94,.14);color:#4ade80}
+.pill.cache{background:rgba(34,211,238,.14);color:var(--cyan)}
+.pill.gv{background:rgba(239,71,89,.14);color:#ff7a88}
+.pill.gf{background:rgba(245,165,36,.14);color:var(--amber)}
+.pill.efe{background:rgba(59,130,246,.14);color:#7aa8ff}
+.pill.brk{background:rgba(168,85,247,.16);color:#c99bff}
+.tblq{color:var(--txt3)}
+.rowbtns{display:flex;gap:6px}
+.rowbtns button{width:30px;height:30px;border-radius:8px;background:var(--panel3);display:grid;place-items:center;color:var(--txt2)}
+.rowbtns button:hover{color:var(--gold)}
+.rowbtns button.del:hover{color:var(--red)}
+.empty{text-align:center;padding:50px 20px;color:var(--txt3)}
+.empty svg{opacity:.4;margin-bottom:12px}
+
+/* ---------- MODAL ---------- */
+.modal-bg{position:fixed;inset:0;background:rgba(6,9,15,.72);backdrop-filter:blur(4px);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal.wide{max-width:640px}
+.modal-h{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal-h h3{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:22px;flex:1}
+.modal-h .x{width:34px;height:34px;border-radius:9px;background:var(--panel3);display:grid;place-items:center;color:var(--txt2)}
+.modal-h .x:hover{color:var(--red)}
+.modal-b{padding:22px}
+.modal-f{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+.field{margin-bottom:15px}
+.field label{display:block;font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:12.5px;color:var(--txt2);margin-bottom:6px;font-weight:600}
+.field input,.field select{width:100%}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.type-opt{padding:11px 8px;border-radius:11px;border:1.5px solid var(--line);text-align:center;font-size:14px;font-weight:600;color:var(--txt2);transition:.12s}
+.type-opt:hover{border-color:var(--line2)}
+.type-opt.sel{border-color:var(--gold);background:rgba(217,178,95,.1);color:var(--gold)}
+.type-opt .ti2{display:block;font-size:22px;margin-bottom:3px}
+.who-toggle{display:flex;gap:8px}
+.who-toggle button{flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--line);font-weight:600;font-size:15px;color:var(--txt2)}
+.who-toggle button.sel{border-color:var(--gold);background:rgba(217,178,95,.1);color:var(--gold)}
+
+/* reminder modal */
+.rem-modal .modal{max-width:480px;text-align:center}
+.rem-icon{width:74px;height:74px;border-radius:20px;background:rgba(239,71,89,.15);display:grid;place-items:center;margin:0 auto 16px;color:var(--red)}
+.rem-modal h3{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:27.5px;margin-bottom:8px}
+.rem-modal p{color:var(--txt2);font-size:16px;margin-bottom:6px}
+.rem-big{font-family:'Barlow Condensed';font-weight:700;font-size:50.5px;color:var(--red);line-height:1;margin:10px 0}
+.rem-actions{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.rem-actions .btn{justify-content:center;padding:13px}
+.rem-snooze{font-size:14px;color:var(--txt3);background:none;border:none;text-decoration:underline;margin-top:4px}
+
+/* toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--panel3);border:1px solid var(--line2);border-radius:12px;padding:13px 17px;font-size:15px;font-weight:500;
+  box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;min-width:220px;animation:slidein .3s}
+.toast.ok{border-left:3px solid var(--green)}.toast.err{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--blue)}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.section{display:none}.section.active{display:block}
+.hide{display:none!important}
+.muted{color:var(--txt3)}
+.rt{text-align:right}
+.pos{color:#4ade80}.neg{color:#ff7a88}
+
+.settings-block{max-width:640px}
+.settings-block .card{margin-bottom:16px}
+.help{font-size:14px;color:var(--txt3);margin-top:6px;line-height:1.5}
+.code{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:2px 7px;font-family:monospace;font-size:14px}
+.status-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-260px;z-index:90;width:238px;transition:.25s}
+  .sidebar.open{left:0}
+  .menu-toggle{display:grid!important}
+  .main{padding:16px 14px 32px}
+  .top h2{font-size:26px}
+  .kpi .kval{font-size:29px}
+  .card:has(table){overflow-x:auto}
+  .card table{min-width:600px}
+}
+.menu-toggle{display:none;width:42px;height:42px;border-radius:10px;background:var(--panel);border:1px solid var(--line);place-items:center}
+
+/* ================= TEMPORADA 2 · AÑADIDOS ================= */
+.season-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+  background:rgba(217,178,95,.12);border:1px solid rgba(217,178,95,.35);color:var(--gold);
+  font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:12.5px;font-weight:700}
+.archive-banner{margin-bottom:16px;padding:12px 16px;border-radius:12px;border:1px dashed var(--line2);
+  background:var(--panel2);color:var(--txt2);font-size:14.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.archive-banner b{color:var(--gold)}
+
+/* fichas pendientes (beneficio / avisos) */
+.tickets{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.ticket{border-radius:14px;padding:14px 15px;border:1px solid var(--line2);position:relative;overflow:hidden;
+  background:linear-gradient(160deg,var(--panel2),var(--panel))}
+.ticket::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+.ticket.benef::before{background:var(--purple)}
+.ticket.aviso::before{background:var(--amber)}
+.ticket .tk-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ticket .tk-cat{font-weight:600;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket .tk-date{font-size:12.5px;color:var(--txt3);white-space:nowrap}
+.ticket .tk-big{font-family:'Barlow Condensed';font-weight:700;font-size:30px;line-height:1.1;margin:6px 0 2px}
+.ticket .tk-sub{font-size:13.5px;color:var(--txt2)}
+.ticket .tk-acts{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.ticket .tk-acts .btn{padding:7px 11px;font-size:14px}
+.ticket .tk-link{background:none;border:none;color:var(--txt3);font-size:13px;text-decoration:underline;padding:0}
+.ticket .tk-link:hover{color:var(--gold)}
+
+/* alerta grande arriba */
+.alertbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 16px;border-radius:13px;margin-bottom:16px;font-size:15px}
+.alertbar.benef{background:linear-gradient(90deg,rgba(168,85,247,.16),rgba(168,85,247,.03));border:1px solid rgba(168,85,247,.35);color:var(--txt)}
+.alertbar.aviso{background:linear-gradient(90deg,rgba(245,165,36,.16),rgba(245,165,36,.03));border:1px solid rgba(245,165,36,.4);color:var(--txt)}
+.alertbar .ab-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;font-size:18px}
+.alertbar.benef .ab-ic{background:rgba(168,85,247,.22)}
+.alertbar.aviso .ab-ic{background:rgba(245,165,36,.22)}
+.alertbar .ab-txt{flex:1;min-width:180px}
+.alertbar b{font-family:'Barlow Condensed';font-size:19px}
+
+/* segmento entrada/salida caja */
+.dir-toggle{display:flex;gap:8px}
+.dir-toggle button{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line);font-weight:600;font-size:15px;color:var(--txt2)}
+.dir-toggle button.sel.in{border-color:var(--green);background:rgba(34,197,94,.12);color:#4ade80}
+.dir-toggle button.sel.out{border-color:var(--red);background:rgba(239,71,89,.12);color:#ff7a88}
+
+/* tabla persona */
+.pergrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.per-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.per-av{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:21px;flex:none}
+.per-head .pn{font-family:'Barlow Condensed';font-weight:700;font-size:23px;text-transform:uppercase;letter-spacing:.5px}
+.per-head .ps{font-size:13px;color:var(--txt3)}
+.debt-box{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--panel3)}
+.debt-box .dl{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;font-size:12.5px;color:var(--txt3)}
+.debt-box .dv{font-family:'Barlow Condensed';font-weight:700;font-size:27px;line-height:1.1}
+.debt-box .dd{font-size:13px;color:var(--txt2);margin-top:3px}
+
+/* ================= CERDITO ================= */
+.pig-fab{position:fixed;right:22px;bottom:22px;z-index:150;width:66px;height:66px;border-radius:50%;
+  background:linear-gradient(160deg,#ffd0e0,#ff9dc0);border:2px solid rgba(255,255,255,.55);
+  box-shadow:0 10px 28px rgba(0,0,0,.4);display:grid;place-items:center;transition:.18s}
+.pig-fab:hover{transform:translateY(-3px) scale(1.04)}
+.pig-fab .bubble{position:absolute;top:-8px;right:-4px;min-width:22px;height:22px;border-radius:12px;background:var(--red);
+  color:#fff;font-size:12.5px;font-weight:700;display:grid;place-items:center;padding:0 5px;border:2px solid var(--bg)}
+.pig-panel{position:fixed;right:22px;bottom:100px;z-index:150;width:380px;max-width:calc(100vw - 32px);
+  height:540px;max-height:calc(100vh - 140px);background:var(--panel);border:1px solid var(--line2);border-radius:18px;
+  box-shadow:0 22px 60px rgba(0,0,0,.5);display:none;flex-direction:column;overflow:hidden}
+.pig-panel.show{display:flex}
+.pig-head{padding:13px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;
+  background:linear-gradient(160deg,var(--panel2),var(--panel))}
+.pig-head .nm{font-family:'Barlow Condensed';font-weight:700;font-size:19px;letter-spacing:.5px;line-height:1.1}
+.pig-head .st{font-size:12.5px;color:var(--txt3)}
+.pig-head .x{margin-left:auto;width:30px;height:30px;border-radius:9px;background:var(--panel3);display:grid;place-items:center;color:var(--txt2)}
+.pig-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:11px}
+.pmsg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:14.5px;line-height:1.5}
+.pmsg.bot{background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start}
+.pmsg.me{background:rgba(217,178,95,.16);border:1px solid rgba(217,178,95,.3);color:var(--txt);
+  border-bottom-right-radius:5px;align-self:flex-end}
+.pmsg b{color:var(--gold)}
+.pmsg .num{font-family:'Barlow Condensed';font-weight:700;font-size:17px}
+.pmsg ul{margin:6px 0 0 16px}
+.pmsg li{margin-bottom:3px}
+.pig-chips{display:flex;gap:7px;flex-wrap:wrap;padding:0 14px 10px}
+.pig-chips button{padding:6px 11px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);
+  font-size:13px;color:var(--txt2)}
+.pig-chips button:hover{border-color:var(--gold);color:var(--gold)}
+.pig-foot{padding:11px 13px;border-top:1px solid var(--line);display:flex;gap:9px}
+.pig-foot input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  padding:10px 13px;border-radius:11px;font-size:14.5px}
+.pig-foot button{width:42px;border-radius:11px;background:var(--gold);color:#1a1206;display:grid;place-items:center;font-size:17px}
+@media(max-width:520px){
+  .pig-panel{right:8px;left:8px;width:auto;bottom:92px;height:calc(100vh - 150px)}
+  .pig-fab{width:58px;height:58px;right:14px;bottom:14px}
+}
+.switch{font-size:14px;color:var(--txt2);display:inline-flex;align-items:center;gap:7px}
+</style>
+</head>
+<body>
+<!-- cerdito reutilizable -->
+<svg style="display:none">
+  <symbol id="pigIcon" viewBox="0 0 64 64">
+    <g>
+      <!-- orejas -->
+      <path d="M15 27 L11.5 15.5 L26 21 Z" fill="#ef95b7"/>
+      <path d="M49 27 L52.5 15.5 L38 21 Z" fill="#ef95b7"/>
+      <!-- cabeza -->
+      <ellipse cx="32" cy="39" rx="20" ry="17" fill="#f7a8c4"/>
+      <circle cx="18.5" cy="44" r="3.6" fill="#f08bb2" opacity=".65"/>
+      <circle cx="45.5" cy="44" r="3.6" fill="#f08bb2" opacity=".65"/>
+      <!-- ojos -->
+      <circle cx="25" cy="35" r="2.7" fill="#4a2337"/>
+      <circle cx="39" cy="35" r="2.7" fill="#4a2337"/>
+      <circle cx="25.9" cy="34" r="1" fill="#fff"/>
+      <circle cx="39.9" cy="34" r="1" fill="#fff"/>
+      <!-- hocico -->
+      <ellipse cx="32" cy="44.5" rx="8.6" ry="6.4" fill="#e87fa8"/>
+      <ellipse cx="28.8" cy="44.5" rx="1.7" ry="2.5" fill="#8c3e5c"/>
+      <ellipse cx="35.2" cy="44.5" rx="1.7" ry="2.5" fill="#8c3e5c"/>
+      <!-- sombrero de copa -->
+      <g transform="rotate(-9 32 18)">
+        <ellipse cx="32" cy="22" rx="19" ry="4.2" fill="#232838"/>
+        <rect x="22" y="7" width="20" height="15" fill="#2d3346"/>
+        <ellipse cx="32" cy="7" rx="10" ry="3.2" fill="#3a4157"/>
+        <rect x="22" y="15.5" width="20" height="4.2" fill="#d9b25f"/>
+      </g>
+    </g>
+  </symbol>
+</svg>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <h1>ALTILLO</h1>
+      <div class="sub" id="brandSub">Dineros · Temporada 2</div>
+    </div>
+    <nav class="nav" id="nav"><!-- generado por JS --></nav>
+    <div class="side-card" id="sideStatus"><!-- estado recordatorio --></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="top">
+      <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div>
+        <h2 id="pageTitle">Dashboard general</h2>
+        <div class="hsub" id="pageSub">Visión general del proyecto Altillo</div>
+      </div>
+      <div class="top-controls">
+        <div id="remChipSlot"></div>
+        <div class="seg" title="Tema">
+          <button id="thDark" class="on" onclick="setTheme('dark')">🌙 Oscuro</button>
+          <button id="thLight" onclick="setTheme('light')">☀️ Claro</button>
+        </div>
+        <div class="ctl">
+          <label>Temporada</label>
+          <select id="seasonSel" onchange="setSeason(this.value)"></select>
+        </div>
+        <div class="ctl">
+          <label>Mes</label>
+          <select id="monthSel" onchange="state.ui.month=this.value;save();renderAll()"></select>
+        </div>
+        <button class="btn gold" onclick="openEntry()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir movimiento
+        </button>
+        <div class="upd" id="lastUpd"></div>
+        <button class="iconbtn" title="Recalcular" onclick="renderAll();toast('Datos recalculados','ok')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Las secciones se inyectan aquí -->
+    <div id="views"></div>
+  </main>
+</div>
+
+<!-- CERDITO ASISTENTE -->
+<button class="pig-fab" id="pigFab" title="Pregúntale al cerdito" onclick="pigToggle()">
+  <svg width="40" height="40"><use href="#pigIcon"/></svg>
+  <span class="bubble hide" id="pigBubble">!</span>
+</button>
+<div class="pig-panel" id="pigPanel">
+  <div class="pig-head">
+    <svg width="34" height="34"><use href="#pigIcon"/></svg>
+    <div>
+      <div class="nm">Don Cerdito</div>
+      <div class="st">Contable de Altillo · siempre despierto</div>
+    </div>
+    <button class="x" onclick="pigToggle(false)">✕</button>
+  </div>
+  <div class="pig-body" id="pigBody"></div>
+  <div class="pig-chips" id="pigChips"></div>
+  <div class="pig-foot">
+    <input id="pigInput" placeholder="Pregúntame lo que sea…" onkeydown="if(event.key==='Enter')pigSend()">
+    <button onclick="pigSend()">➤</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="entryModal"></div>
+<div class="modal-bg rem-modal" id="remModal"></div>
+<div class="modal-bg" id="avisoModal"></div>
+<div class="modal-bg" id="genModal"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ================= DATOS SEMILLA (tu pestaña Datos_App) ================= */
+const SEED = [
+{fecha:"2026-03-17",mes:"FEBRERO",tipo:"Gasto Variable",categoria:"Publi Instagram MIN",quien:"Ariana",importe:8,id:"1773753512345"},
+{fecha:"2026-03-17",mes:"FEBRERO",tipo:"Gasto Variable",categoria:"Canva",quien:"Ariana",importe:12,id:"1773753598765"},
+{fecha:"2026-03-17",mes:"FEBRERO",tipo:"Gasto Variable",categoria:"Web Altillo",quien:"David",importe:185,id:"1773753674123"},
+{fecha:"2026-03-17",mes:"FEBRERO",tipo:"Ingreso",categoria:"Caché",quien:"David",importe:140,id:"1773753752981"},
+{fecha:"2026-03-17",mes:"FEBRERO",tipo:"Gasto Fijo",categoria:"AB Sala de Ensayo",quien:"David",importe:50,id:"1773753835002"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Publi Bolo Villanos",quien:"Ariana",importe:14,id:"1773753912456"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Canva",quien:"Ariana",importe:12,id:"1773753995821"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Cassettes",quien:"Ariana",importe:122,id:"1773754073311"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Transportes",quien:"Ariana",importe:38.13,id:"1773754152200"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Transportes",quien:"David",importe:20.15,id:"1773754231199"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Comida",quien:"Ariana",importe:28.2,id:"1773754310088"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Variable",categoria:"Grabación Video",quien:"Ariana",importe:62,id:"1773754399977"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Ingreso",categoria:"Caché",quien:"David",importe:62,id:"1773754478866"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Ingreso",categoria:"Caché",quien:"Ariana",importe:62,id:"1773754557755"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Gasto Fijo",categoria:"AB Sala de Ensayo",quien:"David",importe:50,id:"1773754636644"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Ingreso",categoria:"Bolo Casa Marx",quien:"Ariana",importe:62,id:"1773754715533"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Ingreso",categoria:"Bolo Casa Marx",quien:"David",importe:12,id:"1773754794422"},
+{fecha:"2026-03-17",mes:"MARZO",tipo:"Ingreso",categoria:"Merchan Villanos",quien:"David",importe:50,id:"1773754873311"},
+{fecha:"2026-03-17",mes:"ABRIL",tipo:"Gasto Fijo",categoria:"AB Sala de Ensayo",quien:"David",importe:50,id:"1773754952200"},
+{fecha:"2026-03-26",mes:"MARZO",tipo:"Gasto Variable",categoria:"Pendrive Roberto Nitemira",quien:"Ariana",importe:6.95,id:"1774524401883"},
+{fecha:"2026-04-12",mes:"ABRIL",tipo:"Caché",categoria:"Concierto la Modernez",quien:"David",importe:100,id:"1775946844352"},
+{fecha:"2026-04-12",mes:"ABRIL",tipo:"Caché",categoria:"La Modernez",quien:"Ariana",importe:32,id:"1775946972034"},
+{fecha:"2026-04-12",mes:"ABRIL",tipo:"Efectivo",categoria:"La Modernez",quien:"Ariana",importe:30,id:"1775947175317"},
+{fecha:"2026-04-12",mes:"ABRIL",tipo:"Efectivo",categoria:"Que ya había",quien:"Ariana",importe:25,id:"1775947284934"},
+{fecha:"2026-04-19",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Merchan Textil",quien:"Ariana",importe:30,id:"1776612611211"},
+{fecha:"2026-04-19",mes:"MARZO",tipo:"Caché",categoria:"Concierto Sala Villanos",quien:"David",importe:173,id:"1776613653175"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Ropa pa merchan",quien:"Ariana",importe:17.2,id:"1776614695139"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"DTF",quien:"Ariana",importe:12.5,id:"1776615737103"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Gasolina ida Guitarvera",quien:"David",importe:35,id:"1776616779067"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Comida Mercadona",quien:"David",importe:14,id:"1776617821031"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Voltios Aso Parque Comillas",quien:"David",importe:20,id:"1776618862995"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Voltio Fuente la Reina",quien:"David",importe:8.15,id:"1776619904959"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Cena y licorca",quien:"Ariana",importe:31,id:"1776620946923"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Comida gasolinera",quien:"Ariana",importe:35,id:"1776621988887"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Desayuno Guitarvera",quien:"Ariana",importe:39.5,id:"1776623030851"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Gasolina vuelta Guitarvera",quien:"Ariana",importe:62,id:"1776624072815"},
+{fecha:"2026-04-30",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Martelasss",quien:"Ariana",importe:16.5,id:"1776625114779"},
+{fecha:"2026-05-02",mes:"ABRIL",tipo:"Ingreso",categoria:"Aso Parque Comillas",quien:"David",importe:340,id:"1777742298710"},
+{fecha:"2026-05-02",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Anthropic",quien:"Ariana",importe:37,id:"1777742881109"},
+{fecha:"2026-05-02",mes:"ABRIL",tipo:"Gasto Variable",categoria:"Canva",quien:"Ariana",importe:12,id:"1777743048340"}
+];
+</script>
+
+<script>
+/* ============================================================= */
+/*  ALTILLO · DINEROS — motor (Temporada 2)                      */
+/* ============================================================= */
+const STORE_KEY='altillo_dineros_v1';
+const MESES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+const MES_ABBR={ENERO:'ENE',FEBRERO:'FEB',MARZO:'MAR',ABRIL:'ABR',MAYO:'MAY',JUNIO:'JUN',JULIO:'JUL',AGOSTO:'AGO',SEPTIEMBRE:'SEP',OCTUBRE:'OCT',NOVIEMBRE:'NOV',DICIEMBRE:'DIC'};
+const RECORDATORIO_DIAS=14;
+
+/* ---------- TEMPORADAS ---------- */
+const T2_INICIO='2026-09-18', T2_FIN='2027-09-18';
+const TEMPORADAS={
+  T2:{id:'T2',label:'Temporada 2',rango:'18 sep 2026 → 18 sep 2027',desde:T2_INICIO,hasta:T2_FIN},
+  T1:{id:'T1',label:'Temporada 1 · archivo',rango:'todo lo anterior al 18 sep 2026',desde:'1900-01-01',hasta:'2026-09-17'}
+};
+const SALDO_INICIAL_ID='saldo-inicial-t2';
+function temporadaDe(fecha){ return (fecha||'') >= T2_INICIO ? 'T2' : 'T1'; }
+
+/* ---------- TIPOS ----------
+   OJO con el modelo: un CACHÉ no es un ingreso. Es dinero que ALTILLO paga a David
+   o a Ariana en concepto de sueldo ⇒ para el proyecto es un GASTO.
+   Ejemplo: entran 600 € de un bolo → 60 € (10%) al beneficio de Altillo →
+   y de ahí salen los cachés pactados (100 € David + 100 € Ariana).              */
+const TIPOS={
+  'Ingreso'        :{grupo:'ingreso', color:'var(--green)',  pill:'ing',   ic:'💰', sign:+1, desc:'Dinero que ENTRA a Altillo (bolos, merchan, subvenciones…)'},
+  'Caché'          :{grupo:'cache',   color:'var(--cyan)',   pill:'cache', ic:'🎤', sign:-1, desc:'Sueldo que Altillo os paga a David o Ariana. Para Altillo es un gasto'},
+  'Gasto Variable' :{grupo:'gasto',   color:'var(--red)',    pill:'gv',    ic:'🧾', sign:-1, desc:'Gasto puntual: gasolina, publi, merchan, comida…'},
+  'Gasto Fijo'     :{grupo:'gasto',   color:'var(--amber)',  pill:'gf',    ic:'📌', sign:-1, desc:'Gasto que se repite cada mes: local de ensayo, cuotas…'},
+  'Pá la Caja'     :{grupo:'caja',    color:'var(--blue)',   pill:'efe',   ic:'🐷', sign:+1, desc:'Meter o sacar dinero físico del bote'},
+  'Paguen Parseros':{grupo:'aviso',   color:'var(--purple)', pill:'brk',   ic:'⚠️', sign:0,  desc:'Aviso de un gasto que vendrá. NO cuenta como gasto hasta que lo marques pagado'}
+};
+const TIPOS_LEGACY={'Efectivo':'Pá la Caja','Deuda Broker':'Paguen Parseros'};
+const QUIENES=['David','Ariana','Altillo'];
+
+/* ---------- ESTADO ---------- */
+let state=null, charts={};
+
+function defaultState(){
+  return {
+    transactions: SEED.map(t=>({...t, estado:''})),
+    meta:{
+      ultimoRelleno: todayISO(),
+      efectivoInicial: 0,
+      bancoInicial: 0,
+      pctBeneficio: 10,
+      migradoT2: false,
+      metas:[
+        {nombre:'Ingresos temporada', objetivo:6000, tipo:'ingresos'},
+        {nombre:'Techo de gastos',    objetivo:4000, tipo:'gastos'},
+        {nombre:'Bote de beneficio',  objetivo:1000, tipo:'beneficio'}
+      ],
+      conciertos:[],
+      sync:{url:'https://script.google.com/macros/s/AKfycbyZtGOv9Xaabd-9t6bG1GVX1ld_Mw3J69tqQyUypEcuSODL7XRvgHJMbYeTKmWs0MVyGw/exec', token:'altillo-2026', last:''},
+      recentlyDeleted:[],
+      alarma:true, notif:false, snoozeHasta:'',
+      avisoVistoHoy:''
+    },
+    ui:{ view:'resumen', month:'TODO', temporada:'T2', chartView:'mensual', theme:'dark' }
+  };
+}
+function todayISO(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+function round2(n){return Math.round((+n||0)*100)/100;}
+
+function load(){
+  try{const raw=localStorage.getItem(STORE_KEY); if(raw){state=JSON.parse(raw); mergeDefaults();}}catch(e){}
+  if(!state) state=defaultState();
+  migrarT2();
+}
+function mergeDefaults(){
+  const d=defaultState();
+  state.meta = Object.assign({}, d.meta, state.meta||{});
+  state.meta.sync = Object.assign({}, d.meta.sync, state.meta.sync||{});
+  state.ui = Object.assign({}, d.ui, state.ui||{});
+  if(!Array.isArray(state.transactions)) state.transactions=d.transactions;
+  if(!Array.isArray(state.meta.conciertos)) state.meta.conciertos=[];
+  if(!Array.isArray(state.meta.metas)||!state.meta.metas.length) state.meta.metas=d.meta.metas;
+  if(!Array.isArray(state.meta.recentlyDeleted)) state.meta.recentlyDeleted=[];
+  if(typeof state.meta.pctBeneficio!=='number') state.meta.pctBeneficio=10;
+  if(!TEMPORADAS[state.ui.temporada]) state.ui.temporada='T2';
+}
+
+/* Migración a Temporada 2:
+   - renombra los tipos antiguos (Efectivo → Pá la Caja, Deuda Broker → Paguen Parseros)
+   - "Otro" pasa a ser "Altillo"
+   - archiva todo lo anterior al 18/09/2026 y arrastra SOLO el dinero real de la caja */
+function migrarT2(){
+  state.transactions.forEach(t=>{
+    if(TIPOS_LEGACY[t.tipo]) t.tipo=TIPOS_LEGACY[t.tipo];
+    if(t.quien==='Otro') t.quien='Altillo';
+  });
+  if(state.meta.migradoT2) return;
+  const t1=state.transactions.filter(t=>temporadaDe(t.fecha)==='T1');
+  const cajaT1=(+state.meta.efectivoInicial||0)+t1.reduce((s,t)=>{
+    const imp=+t.importe||0;
+    if(t.tipo==='Pá la Caja') return s+imp;
+    if(t.tipo==='Ingreso'&&t.destino==='caja') return s+imp;
+    if(['Gasto Variable','Gasto Fijo','Caché'].includes(t.tipo)&&t.pagado==='caja') return s-imp;
+    return s;
+  },0);
+  if(!state.transactions.some(t=>t.id===SALDO_INICIAL_ID)){
+    state.transactions.push({
+      fecha:T2_INICIO, mes:'SEPTIEMBRE', tipo:'Pá la Caja',
+      categoria:'Saldo inicial de caja (viene de Temporada 1)',
+      quien:'Altillo', importe:round2(cajaT1), id:SALDO_INICIAL_ID,
+      estado:'', destino:'', pagado:'', origen:'', benef:'', actualizado:0
+    });
+  }
+  state.meta.migradoT2=true;
+  state.meta.efectivoInicial=0;
+  state.ui.temporada='T2';
+  state.ui.month='TODO';
+  save();
+}
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){toast('No se pudo guardar en este navegador','err');}}
+
+/* ---------- UTILIDADES ---------- */
+const fmt=(n)=> (n<0?'-':'')+'€'+Math.abs(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0=(n)=> (n<0?'-':'')+'€'+Math.abs(Math.round(n)).toLocaleString('es-ES');
+function mesFromDate(iso){const m=new Date(iso+'T00:00:00').getMonth();return MESES[m];}
+function tipoInfo(t){return TIPOS[TIPOS_LEGACY[t]||t]||{grupo:'gasto',color:'var(--txt3)',pill:'gv',ic:'•',sign:-1,desc:''};}
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pctBenef(){return +state.meta.pctBeneficio||10;}
+function sumImp(list){return list.reduce((s,t)=>s+(+t.importe||0),0);}
+
+/* ---------- PERIODOS ---------- */
+function seasonTx(temp){
+  const T=temp||state.ui.temporada;
+  return state.transactions.filter(t=>temporadaDe(t.fecha)===T);
+}
+function mesKey(iso){return (iso||'').slice(0,7);}
+function mesLabel(k){
+  if(!k) return '—';
+  const [y,m]=k.split('-');
+  const nm=MESES[(+m)-1]||'';
+  return nm[0]+nm.slice(1).toLowerCase()+' '+y;
+}
+function mesesConDatos(){
+  const s=new Set(seasonTx().map(t=>mesKey(t.fecha)).filter(Boolean));
+  return [...s].sort();
+}
+function periodTx(){
+  const m=state.ui.month, txs=seasonTx();
+  return m==='TODO'? txs : txs.filter(t=>mesKey(t.fecha)===m);
+}
+
+/* ---------- AGREGADOS ---------- */
+function agg(txs){
+  let ingresos=0,gastos=0,gvar=0,gfijo=0,cache=0,cajaMov=0,avisoPend=0,avisoPag=0;
+  txs.forEach(t=>{
+    const imp=+t.importe||0;
+    switch(t.tipo){
+      case 'Ingreso': ingresos+=imp; break;
+      case 'Caché': gastos+=imp; cache+=imp; break;
+      case 'Gasto Variable': gastos+=imp; gvar+=imp; break;
+      case 'Gasto Fijo': gastos+=imp; gfijo+=imp; break;
+      case 'Pá la Caja': cajaMov+=imp; break;
+      case 'Paguen Parseros':
+        if(t.estado==='Pagado'){gastos+=imp;gvar+=imp;avisoPag+=imp;} else avisoPend+=imp;
+        break;
+    }
+  });
+  return {ingresos,gastos,gvar,gfijo,cache,cajaMov,avisoPend,avisoPag,beneficio:ingresos-gastos};
+}
+
+/* saldo de la caja: movimientos del bote + ingresos que entraron en efectivo − gastos pagados con la caja */
+function cajaBalance(txs){
+  let s=0;
+  (txs||seasonTx()).forEach(t=>{
+    const imp=+t.importe||0;
+    if(t.tipo==='Pá la Caja') s+=imp;
+    else if(t.tipo==='Ingreso'&&t.destino==='caja') s+=imp;
+    else if(['Gasto Variable','Gasto Fijo','Caché'].includes(t.tipo)&&t.pagado==='caja') s-=imp;
+    else if(t.tipo==='Paguen Parseros'&&t.estado==='Pagado'&&t.pagado==='caja') s-=imp;
+  });
+  return round2(s);
+}
+/* todo lo que toca la caja, para la tabla de la vista Caja */
+function cajaTx(txs){
+  return (txs||seasonTx()).filter(t=>
+    t.tipo==='Pá la Caja' ||
+    (t.tipo==='Ingreso'&&t.destino==='caja') ||
+    (['Gasto Variable','Gasto Fijo','Caché'].includes(t.tipo)&&t.pagado==='caja') ||
+    (t.tipo==='Paguen Parseros'&&t.estado==='Pagado'&&t.pagado==='caja'));
+}
+function efectoCaja(t){
+  const imp=+t.importe||0;
+  if(t.tipo==='Pá la Caja') return imp;
+  if(t.tipo==='Ingreso'&&t.destino==='caja') return imp;
+  if(t.pagado==='caja') return -imp;
+  return 0;
+}
+
+/* ---------- BENEFICIO 10% ---------- */
+function apartadoDe(t){return round2((+t.importe||0)*pctBenef()/100);}
+function apartadoResuelto(t){
+  if(t.benef==='ya') return true;
+  return state.transactions.some(x=>x.origen===t.id);
+}
+function ingresosDe(txs){return (txs||seasonTx()).filter(t=>t.tipo==='Ingreso');}
+function apartadosPendientes(txs){return ingresosDe(txs).filter(t=>!apartadoResuelto(t));}
+function apartadosHechos(txs){return ingresosDe(txs).filter(t=>apartadoResuelto(t));}
+function fondoBeneficio(txs){return round2(apartadosHechos(txs).reduce((s,t)=>s+apartadoDe(t),0));}
+function beneficioPendiente(txs){return round2(apartadosPendientes(txs).reduce((s,t)=>s+apartadoDe(t),0));}
+
+/* ---------- POR PERSONA ---------- */
+function personaStats(p,txs){
+  const all=txs||seasonTx();
+  const mine=all.filter(t=>t.quien===p);
+  const ingresos=sumImp(mine.filter(t=>t.tipo==='Ingreso'));
+  const cobrado=sumImp(mine.filter(t=>t.tipo==='Caché'));
+  const gastos=sumImp(mine.filter(t=>['Gasto Variable','Gasto Fijo'].includes(t.tipo)))
+             + sumImp(mine.filter(t=>t.tipo==='Paguen Parseros'&&t.estado==='Pagado'));
+  const adelantado=sumImp(mine.filter(t=>['Gasto Variable','Gasto Fijo'].includes(t.tipo)&&t.pagado!=='caja'&&t.pagado!=='banco'));
+  const enBolsillo=mine.filter(t=>t.tipo==='Ingreso'&&t.destino==='pendiente');
+  const pend10=mine.filter(t=>t.tipo==='Ingreso'&&t.destino!=='pendiente'&&!apartadoResuelto(t));
+  const debeBolsillo=sumImp(enBolsillo);
+  const debe10=round2(pend10.reduce((s,t)=>s+apartadoDe(t),0));
+  const metidoEnCaja=sumImp(mine.filter(t=>t.tipo==='Pá la Caja'&&(+t.importe||0)>0));
+  const sacadoDeCaja=Math.abs(sumImp(mine.filter(t=>t.tipo==='Pá la Caja'&&(+t.importe||0)<0)));
+  return {ingresos,cobrado,gastos,adelantado,debeBolsillo,debe10,debe:round2(debeBolsillo+debe10),
+          enBolsillo,pend10,metidoEnCaja,sacadoDeCaja,n:mine.length};
+}
+
+/* ---------- RECORDATORIO QUINCENAL ---------- */
+function diasDesdeRelleno(){
+  const d0=new Date((state.meta.ultimoRelleno||todayISO())+'T00:00:00');
+  return Math.max(0,Math.floor((Date.now()-d0.getTime())/86400000));
+}
+function remState(){
+  const d=diasDesdeRelleno(), rest=RECORDATORIO_DIAS-d;
+  if(d>=RECORDATORIO_DIAS) return {level:'late', dias:d, rest};
+  if(d>=RECORDATORIO_DIAS-3) return {level:'warn', dias:d, rest};
+  return {level:'ok', dias:d, rest};
+}
+function resetRelleno(){state.meta.ultimoRelleno=todayISO();state.meta.snoozeHasta='';save();updateReminderUI();}
+
+let audioCtx=null;
+function beep(times=3){
+  if(!state.meta.alarma) return;
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    let t=audioCtx.currentTime;
+    for(let i=0;i<times;i++){
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='sine';o.frequency.value= i%2?660:880;
+      g.gain.setValueAtTime(0.001,t);g.gain.exponentialRampToValueAtTime(0.18,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.34);
+      o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+0.35);
+      t+=0.42;
+    }
+  }catch(e){}
+}
+function updateReminderUI(){
+  const r=remState();
+  const slot=document.getElementById('remChipSlot');
+  let txt;
+  if(r.level==='ok') txt=`Al día · faltan ${r.rest} d`;
+  else if(r.level==='warn') txt=`Relleno en ${r.rest} d`;
+  else txt=`¡Toca rellenar! (${r.dias} d)`;
+  slot.innerHTML=`<div class="chip ${r.level}" ${r.level==='late'?'onclick="showReminder(true)"':''} title="Relleno quincenal de cuentas"><span class="pt" style="background:currentColor"></span>${txt}</div>`;
+  const pct=Math.max(0,Math.min(100,(r.dias/RECORDATORIO_DIAS)*100));
+  const barCol = r.level==='late'?'var(--red)': r.level==='warn'?'var(--amber)':'var(--green)';
+  const caja=cajaBalance(), pend=beneficioPendiente();
+  document.getElementById('sideStatus').innerHTML=`
+    <div class="st-title">Caja ahora mismo</div>
+    <div class="st-big" style="color:var(--blue)">${fmt(caja)}</div>
+    <div class="st-sub">${pend>0?`Faltan ${fmt(pend)} del ${pctBenef()}%`:'Beneficio al día ✓'}</div>
+    <div class="st-bar"><i style="width:${pct}%;background:${barCol}"></i></div>
+    <div class="st-sub" style="margin-top:8px">${r.level==='late'?`Sin rellenar ${r.dias} días`:`Relleno en ${r.rest} días`}</div>
+    <button class="mini" onclick="openEntry()">+ Registrar movimiento</button>`;
+  const lu=new Date((state.meta.ultimoRelleno||todayISO())+'T00:00:00');
+  document.getElementById('lastUpd').innerHTML=`Último relleno<br><b style="color:var(--txt2)">${lu.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})}</b>`;
+}
+function showReminder(force){
+  const r=remState();
+  if(!force){
+    if(r.level!=='late') return;
+    if(state.meta.snoozeHasta===todayISO()) return;
+  }
+  const bg=document.getElementById('remModal');
+  bg.innerHTML=`<div class="modal">
+    <div class="modal-b">
+      <div class="rem-icon">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <h3>Toca rellenar las cuentas</h3>
+      <p>Han pasado</p>
+      <div class="rem-big">${r.dias} días</div>
+      <p>desde el último relleno. El acuerdo es <b style="color:var(--txt)">mínimo cada 2 semanas</b> para no perder el hilo.</p>
+      <div class="rem-actions">
+        <button class="btn gold" onclick="closeRem();openEntry()">Registrar movimientos ahora</button>
+        <button class="btn" onclick="resetRelleno();closeRem();toast('Relleno confirmado ✓','ok')">Ya está todo al día ✓</button>
+        <button class="rem-snooze" onclick="snooze()">Recordármelo mañana</button>
+      </div>
+    </div></div>`;
+  bg.classList.add('show');
+  beep(3);
+}
+function closeRem(){document.getElementById('remModal').classList.remove('show');}
+function snooze(){state.meta.snoozeHasta=todayISO();save();closeRem();toast('Te lo recuerdo mañana','info');}
+function startReminderWatch(){
+  updateReminderUI();
+  setTimeout(()=>showReminder(false),1400);
+  setInterval(()=>{updateReminderUI(); if(remState().level==='late'&&state.meta.notif) pushNotif();},30*60*1000);
+}
+function pushNotif(){
+  if(!('Notification'in window)||Notification.permission!=='granted')return;
+  try{new Notification('ALTILLO · Dineros',{body:`Llevas ${diasDesdeRelleno()} días sin rellenar las cuentas.`});}catch(e){}
+}
+
+/* ---------- TOAST / TEMA ---------- */
+function toast(msg,type='info'){
+  const w=document.getElementById('toasts');
+  const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;
+  w.appendChild(el);setTimeout(()=>{el.style.opacity=0;el.style.transform='translateX(20px)';setTimeout(()=>el.remove(),300);},2800);
+}
+function setTheme(t){
+  state.ui.theme=t;document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('thDark').classList.toggle('on',t==='dark');
+  document.getElementById('thLight').classList.toggle('on',t==='light');
+  save();renderAll();
+}
+function setSeason(t){
+  state.ui.temporada=t; state.ui.month='TODO'; save();
+  document.getElementById('brandSub').textContent='Dineros · '+(t==='T2'?'Temporada 2':'Archivo T1');
+  renderAll();
+  toast(t==='T2'?'Temporada 2 ✓':'Viendo el archivo de la Temporada 1','info');
+}
+</script>
+<script>
+/* ============================================================= */
+/*  NAVEGACIÓN + VISTAS                                          */
+/* ============================================================= */
+const NAV=[
+  {id:'resumen', label:'Resumen', ic:'grid'},
+  {id:'ingresos', label:'Ingresos', ic:'trend-up'},
+  {id:'gastos', label:'Gastos y cachés', ic:'trend-down'},
+  {id:'caja', label:'Pá la Caja', ic:'wallet'},
+  {id:'beneficio', label:'Beneficio 10%', ic:'target'},
+  {id:'parseros', label:'Paguen Parseros', ic:'handshake'},
+  {sep:'Gestión'},
+  {id:'movimientos', label:'Movimientos', ic:'list'},
+  {id:'personas', label:'David & Ariana', ic:'users'},
+  {id:'reportes', label:'Reportes', ic:'file'},
+  {id:'metas', label:'Metas', ic:'flag'},
+  {id:'datos', label:'Datos & Backup', ic:'database'}
+];
+const ICONS={
+  grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+  'trend-up':'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  'trend-down':'<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>',
+  wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',
+  handshake:'<path d="M11 17l2 2a1 1 0 1 0 3-3"/><path d="M14 14l2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="M3 4l1.75.75a2 2 0 0 0 1.42-.25l.47-.28a5.79 5.79 0 0 1 7.06.87"/>',
+  list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  database:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>'
+};
+function icon(name,cls='ic'){return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;}
+
+function buildNav(){
+  const nav=document.getElementById('nav');let h='';
+  NAV.forEach(item=>{
+    if(item.sep){h+=`<div class="nav-label">${item.sep}</div>`;return;}
+    h+=`<button class="nav-item" data-view="${item.id}" onclick="go('${item.id}')">${icon(item.ic)} ${item.label}<span class="nav-badge" data-badge="${item.id}"></span></button>`;
+  });
+  nav.innerHTML=h;
+}
+function go(view){
+  state.ui.view=view;save();
+  document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  document.getElementById('sidebar').classList.remove('open');
+  renderAll();
+}
+const TITLES={
+  resumen:['Dashboard general','Cómo va la temporada'],
+  ingresos:['Ingresos','Todo el dinero que entra a Altillo'],
+  gastos:['Gastos y cachés','Lo que sale: gastos del proyecto y sueldos'],
+  caja:['Pá la Caja','El bote físico: lo que entra, lo que sale y lo que hay'],
+  beneficio:['Beneficio '+'','El % de cada ingreso que se aparta para Altillo'],
+  parseros:['Paguen Parseros','Avisos de gastos que vendrán'],
+  movimientos:['Movimientos','Todas las anotaciones'],
+  personas:['David & Ariana','Qué aporta y qué debe cada uno'],
+  reportes:['Reportes','Resumen mensual de la temporada'],
+  metas:['Metas','Objetivos de la temporada'],
+  datos:['Datos & Backup','Sincronización, archivo y ajustes']
+};
+
+function renderAll(){
+  const v=state.ui.view;
+  const [t,s]=TITLES[v]||TITLES.resumen;
+  document.getElementById('pageTitle').textContent = v==='beneficio'?`Beneficio ${pctBenef()}%`:t;
+  document.getElementById('pageSub').textContent = s;
+  // selector de temporada
+  const ss=document.getElementById('seasonSel');
+  ss.innerHTML=Object.values(TEMPORADAS).map(T=>`<option value="${T.id}">${T.label}</option>`).join('');
+  ss.value=state.ui.temporada;
+  // selector de mes
+  const sel=document.getElementById('monthSel');
+  const meses=mesesConDatos();
+  sel.innerHTML=['<option value="TODO">Toda la temporada</option>'].concat(meses.map(m=>`<option value="${m}">${mesLabel(m)}</option>`)).join('');
+  if(!meses.includes(state.ui.month)) state.ui.month='TODO';
+  sel.value=state.ui.month;
+  document.getElementById('brandSub').textContent='Dineros · '+(state.ui.temporada==='T2'?'Temporada 2':'Archivo T1');
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};
+  const views=document.getElementById('views');
+  const banner = state.ui.temporada==='T1'
+    ? `<div class="archive-banner">📦 Estás viendo el <b>archivo de la Temporada 1</b> (todo lo anterior al 18/09/2026). Solo lectura recomendada: estos números no cuentan para la temporada actual.
+       <button class="btn" style="padding:5px 11px;font-size:14px" onclick="setSeason('T2')">Volver a Temporada 2</button></div>` : '';
+  const map={resumen:viewResumen,ingresos:viewIngresos,gastos:viewGastos,caja:viewCaja,beneficio:viewBeneficio,
+             parseros:viewParseros,movimientos:viewMovimientos,personas:viewPersonas,reportes:viewReportes,
+             metas:viewMetas,datos:viewDatos};
+  views.innerHTML=banner+(map[v]||viewResumen)();
+  updateBadges();
+  requestAnimationFrame(drawCharts);
+  updateReminderUI();
+}
+function updateBadges(){
+  const pend=apartadosPendientes().length, avisos=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado').length;
+  document.querySelectorAll('[data-badge]').forEach(b=>{
+    const n = b.dataset.badge==='beneficio'?pend : b.dataset.badge==='parseros'?avisos : 0;
+    b.textContent=n?n:'';
+    b.style.cssText=n?'margin-left:auto;background:var(--red);color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:1px 7px':'';
+  });
+}
+
+/* helpers */
+function aggByCat(txs,tipos){
+  const m={};
+  txs.filter(t=>tipos.includes(t.tipo)).forEach(t=>{m[t.categoria]=(m[t.categoria]||0)+(+t.importe||0);});
+  return Object.entries(m).map(([nombre,total])=>({nombre,total})).sort((a,b)=>b.total-a.total);
+}
+function serieMensual(){
+  return mesesConDatos().map(k=>{
+    const a=agg(seasonTx().filter(t=>mesKey(t.fecha)===k));
+    return {k,label:mesLabel(k).slice(0,3)+' '+k.slice(2,4),...a};
+  });
+}
+function categoriasUnicas(){return [...new Set(state.transactions.map(t=>t.categoria))].filter(Boolean).sort();}
+function catList(items,total,color){
+  if(!items.length) return `<div class="empty" style="padding:24px">Sin datos en este periodo</div>`;
+  return items.map(it=>{
+    const pc=total?Math.round(it.total/total*100):0;
+    return `<div class="catrow"><span class="nm" title="${esc(it.nombre)}">${esc(it.nombre)}</span>
+      <span class="catbar"><i style="width:${pc}%;background:${color}"></i></span>
+      <span class="vl">${fmt0(it.total)}</span><span class="pc">${pc}%</span></div>`;
+  }).join('');
+}
+function detList(items,total,color){
+  if(!items.length) return `<div class="empty" style="padding:24px">Sin movimientos</div>`;
+  return `<div class="dlist">`+items.map(it=>{
+    const pc=total?Math.round(it.total/total*100):0;
+    return `<div class="di"><span class="dic" style="background:${color}22;color:${color}">${it.ic||'•'}</span>
+      <span class="dn" title="${esc(it.nombre)}">${esc(it.nombre)}</span>
+      <span class="dv">${fmt0(it.total)}</span><span class="dp">${pc}%</span></div>`;
+  }).join('')+`</div>`;
+}
+function resLine(ic,nm,val,color,isPct){
+  return `<div class="resline"><span class="ri" style="background:${color}22;color:${color}">${ic}</span>
+    <span class="rn">${nm}</span><span class="rv" style="color:${color}">${isPct?val+'%':fmt(val)}</span></div>`;
+}
+function kpiCard(label,val,color,ic,sub){
+  return `<div class="card kpi"><div class="kicon" style="background:${color}1f;color:${color}">${ic}</div>
+    <div class="klabel">${label}</div><div class="kval" style="color:${color}">${fmt(val)}</div>
+    <div class="kdelta flat">${sub||''}</div></div>`;
+}
+
+/* ================= RESUMEN ================= */
+function viewResumen(){
+  const txs=periodTx(), a=agg(txs);
+  const caja=cajaBalance(), fondo=fondoBeneficio(), pend=beneficioPendiente();
+  const pendList=apartadosPendientes(), avisos=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
+  const avisoTot=sumImp(avisos);
+  const alerts=[
+    pendList.length?`<div class="alertbar benef"><span class="ab-ic">🐷</span><div class="ab-txt">
+      Hay <b>${pendList.length}</b> ingreso${pendList.length>1?'s':''} sin apartar su ${pctBenef()}% · faltan <b>${fmt(pend)}</b> por meter en la caja</div>
+      <button class="btn gold" onclick="go('beneficio')">Ver fichas</button></div>`:'',
+    avisos.length?`<div class="alertbar aviso"><span class="ab-ic">⚠️</span><div class="ab-txt">
+      <b>${avisos.length}</b> aviso${avisos.length>1?'s':''} de Paguen Parseros pendiente${avisos.length>1?'s':''} · <b>${fmt(avisoTot)}</b> que vendrán</div>
+      <button class="btn" onclick="go('parseros')">Revisar</button></div>`:''
+  ].join('');
+  const catIng=aggByCat(txs,['Ingreso']);
+  const catGV=aggByCat(txs,['Gasto Variable']).map(x=>({...x,ic:'🧾'}));
+  const catGF=aggByCat(txs,['Gasto Fijo']).map(x=>({...x,ic:'📌'}));
+  return `
+  ${alerts}
+  <div class="grid kpis">
+    ${kpiCard('Ingresos',a.ingresos,'var(--green)','💰','Entradas del periodo')}
+    ${kpiCard('Gastos (con cachés)',a.gastos,'var(--red)','🧾',`Cachés: ${fmt0(a.cache)}`)}
+    ${kpiCard('Beneficio / Pérdida',a.beneficio,a.beneficio>=0?'var(--purple)':'var(--red)','📈','Ingresos − gastos')}
+    ${kpiCard('Pá la Caja',caja,'var(--blue)','🐷','Dinero físico en el bote')}
+    ${kpiCard('Bote de beneficio',fondo,'var(--gold)','🏆',pend>0?`Faltan ${fmt0(pend)}`:'Todo apartado ✓')}
+  </div>
+
+  <div class="grid layout-2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="h-row"><h3>Evolución de la temporada</h3></div>
+      <div class="chart-wrap"><canvas id="chEvo"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="h-row"><h3>De dónde vienen los ingresos</h3><span class="tot">Total<b>${fmt0(a.ingresos)}</b></span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center">
+        <div class="chart-sm"><canvas id="chIng"></canvas></div>
+        <div class="legend" id="legIng"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid layout-3" style="margin-bottom:16px">
+    <div class="card">
+      <div class="h-row"><h3>Reparto de gastos</h3><span class="tot">Total<b>${fmt0(a.gastos)}</b></span></div>
+      <div class="chart-sm" style="height:180px"><canvas id="chGas"></canvas></div>
+      <div class="legend" id="legGas" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="h-row"><h3>Gastos variables</h3><span class="tot">Total<b>${fmt0(a.gvar)}</b></span></div>
+      ${detList(catGV.slice(0,8),a.gvar,'var(--red)')}
+    </div>
+    <div class="card">
+      <div class="h-row"><h3>Gastos fijos</h3><span class="tot">Total<b>${fmt0(a.gfijo)}</b></span></div>
+      ${detList(catGF.slice(0,8),a.gfijo,'var(--amber)')}
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:2fr 1fr;margin-bottom:16px">
+    <div class="card">
+      <div class="h-row"><h3>Foto de la temporada</h3></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chFlow"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="h-row"><h3>Resumen del periodo</h3></div>
+      ${resLine('💰','Ingresos',a.ingresos,'var(--green)')}
+      ${resLine('🎤','Cachés pagados',a.cache,'var(--cyan)')}
+      ${resLine('🧾','Otros gastos',a.gvar+a.gfijo,'var(--red)')}
+      ${resLine('📈','Beneficio neto',a.beneficio,a.beneficio>=0?'var(--purple)':'var(--red)')}
+      ${resLine('🐷','Caja',caja,'var(--blue)')}
+      ${resLine('🏆','Bote de beneficio',fondo,'var(--gold)')}
+      ${resLine('⚠️','Avisos por venir',avisoTot,'var(--amber)')}
+    </div>
+  </div>
+
+  <div class="grid layout-2">
+    <div class="card">
+      <div class="h-row"><h3>Ingresos por categoría</h3><span class="tot">Total<b>${fmt0(a.ingresos)}</b></span></div>
+      ${catList(catIng.slice(0,7),a.ingresos,'var(--green)')}
+      <div class="tot-line"><span class="tl">Total ingresos</span><span class="tv" style="color:var(--green)">${fmt(a.ingresos)}</span></div>
+    </div>
+    <div class="card">
+      <div class="h-row"><h3>Metas de la temporada</h3><button class="btn ghost" style="padding:5px 10px;font-size:14px" onclick="go('metas')">Editar</button></div>
+      ${metasHtml()}
+    </div>
+  </div>
+
+  <div class="tip"><span class="ti">🐷</span><div><b>Don Cerdito:</b> apunta cada bolo el mismo día. De cada ingreso se aparta el <b>${pctBenef()}%</b> para el bote de Altillo y solo después se reparten los cachés. Si dudas, pregúntame abajo a la derecha.</div></div>`;
+}
+function metasHtml(){
+  const all=agg(seasonTx());
+  const fondo=fondoBeneficio();
+  return state.meta.metas.map(m=>{
+    let actual=0;
+    if(m.tipo==='ingresos')actual=all.ingresos;
+    else if(m.tipo==='gastos')actual=all.gastos;
+    else if(m.tipo==='beneficio')actual=fondo;
+    else actual=Math.max(0,all.beneficio);
+    const pct=m.objetivo?Math.min(100,Math.round(actual/m.objetivo*100)):0;
+    const inverse=m.tipo==='gastos';
+    const col=inverse?(actual<=m.objetivo?'var(--green)':'var(--red)'):(pct>=80?'var(--green)':pct>=40?'var(--amber)':'var(--red)');
+    return `<div class="metarow"><div class="top"><span class="mn">${esc(m.nombre)}</span>
+      <span class="mx"><b>${fmt0(actual)}</b> / ${fmt0(m.objetivo)}<span class="pct" style="color:${col}">${pct}%</span></span></div>
+      <div class="mbar"><i style="width:${pct}%;background:${col}"></i></div></div>`;
+  }).join('');
+}
+
+/* ================= INGRESOS ================= */
+function viewIngresos(){
+  const txs=periodTx(), a=agg(txs);
+  const cat=aggByCat(txs,['Ingreso']);
+  const ings=txs.filter(t=>t.tipo==='Ingreso');
+  const enCaja=sumImp(ings.filter(t=>t.destino==='caja'));
+  const enBanco=sumImp(ings.filter(t=>t.destino==='banco'));
+  const pendiente=sumImp(ings.filter(t=>t.destino==='pendiente'));
+  return `
+  <div class="grid kpis" style="grid-template-columns:repeat(4,1fr)">
+    ${kpiCard('Ingresos totales',a.ingresos,'var(--green)','💰',`${ings.length} entradas`)}
+    ${kpiCard('Entró en la caja',enCaja,'var(--blue)','🐷','Dinero físico')}
+    ${kpiCard('Entró en el banco',enBanco,'var(--cyan)','🏦','Transferencias / bizum')}
+    ${kpiCard('Sin meter en caja',pendiente,pendiente>0?'var(--red)':'var(--txt3)','✋',pendiente>0?'Lo tiene alguien en el bolsillo':'Todo colocado ✓')}
+  </div>
+  <div class="grid layout-2">
+    <div class="card"><div class="h-row"><h3>Evolución de ingresos</h3></div><div class="chart-wrap"><canvas id="chEvoIng"></canvas></div></div>
+    <div class="card"><div class="h-row"><h3>Por categoría</h3><span class="tot">Total<b>${fmt0(a.ingresos)}</b></span></div>${catList(cat,a.ingresos,'var(--green)')}
+      <div class="tot-line"><span class="tl">Total</span><span class="tv" style="color:var(--green)">${fmt(a.ingresos)}</span></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="h-row"><h3>Detalle de ingresos</h3>
+    <button class="btn gold" onclick="openEntry('Ingreso')">+ Nuevo ingreso</button></div>${txTable(ings)}</div>`;
+}
+
+/* ================= GASTOS ================= */
+function viewGastos(){
+  const txs=periodTx(), a=agg(txs);
+  const gv=aggByCat(txs,['Gasto Variable']).map(x=>({...x,ic:'🧾'}));
+  const gf=aggByCat(txs,['Gasto Fijo']).map(x=>({...x,ic:'📌'}));
+  const cachesD=sumImp(txs.filter(t=>t.tipo==='Caché'&&t.quien==='David'));
+  const cachesA=sumImp(txs.filter(t=>t.tipo==='Caché'&&t.quien==='Ariana'));
+  return `
+  <div class="grid kpis" style="grid-template-columns:repeat(4,1fr)">
+    ${kpiCard('Gastos totales',a.gastos,'var(--red)','🧾','Incluye cachés')}
+    ${kpiCard('Variables',a.gvar,'var(--red)','📊',`${a.gastos?Math.round(a.gvar/a.gastos*100):0}% del total`)}
+    ${kpiCard('Fijos',a.gfijo,'var(--amber)','📌',`${a.gastos?Math.round(a.gfijo/a.gastos*100):0}% del total`)}
+    ${kpiCard('Cachés pagados',a.cache,'var(--cyan)','🎤',`David ${fmt0(cachesD)} · Ariana ${fmt0(cachesA)}`)}
+  </div>
+  <div class="grid layout-3">
+    <div class="card"><div class="h-row"><h3>Reparto</h3></div><div class="chart-sm" style="height:180px"><canvas id="chGas"></canvas></div><div class="legend" id="legGas" style="margin-top:12px"></div></div>
+    <div class="card"><div class="h-row"><h3>Gastos variables</h3><span class="tot">Total<b>${fmt0(a.gvar)}</b></span></div>${detList(gv.slice(0,10),a.gvar,'var(--red)')}</div>
+    <div class="card"><div class="h-row"><h3>Gastos fijos</h3><span class="tot">Total<b>${fmt0(a.gfijo)}</b></span></div>${detList(gf.slice(0,10),a.gfijo,'var(--amber)')}</div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="h-row"><h3>Detalle de gastos y cachés</h3>
+    <button class="btn gold" onclick="openEntry('Gasto Variable')">+ Nuevo gasto</button></div>
+    ${txTable(txs.filter(t=>['Gasto Variable','Gasto Fijo','Caché'].includes(t.tipo)))}</div>`;
+}
+
+/* ================= PÁ LA CAJA ================= */
+function viewCaja(){
+  const txs=seasonTx();
+  const caja=cajaBalance(txs), fondo=fondoBeneficio(txs), pend=beneficioPendiente(txs);
+  const libre=round2(caja-fondo);
+  const movs=cajaTx(txs);
+  const entradas=movs.filter(t=>efectoCaja(t)>0), salidas=movs.filter(t=>efectoCaja(t)<0);
+  const ultArqueo=txs.filter(t=>t.categoria&&t.categoria.indexOf('Arqueo')===0).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))[0];
+  return `
+  <div class="grid kpis" style="grid-template-columns:repeat(4,1fr)">
+    ${kpiCard('Hay en la caja',caja,'var(--blue)','🐷','Saldo según la app')}
+    ${kpiCard('De eso, beneficio',fondo,'var(--gold)','🏆','No se toca: es de Altillo')}
+    ${kpiCard('Libre para gastar',libre,libre>=0?'var(--green)':'var(--red)','✋','Caja − beneficio apartado')}
+    ${kpiCard('Entradas / salidas',round2(sumImp(entradas.map(t=>({importe:efectoCaja(t)})))),'var(--green)','↕',`${entradas.length} entradas · ${salidas.length} salidas`)}
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="h-row"><h3>Acciones de caja</h3><span class="tot">${ultArqueo?'Último arqueo: '+fdate(ultArqueo.fecha):'Sin arqueos aún'}</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn gold" onclick="openEntry('Pá la Caja')">🐷 Meter dinero en la caja</button>
+      <button class="btn" onclick="openEntry('Pá la Caja',null,'out')">✂️ Sacar dinero de la caja</button>
+      <button class="btn" onclick="arqueo()">🔎 Contar la caja (arqueo)</button>
+      ${pend>0?`<button class="btn" onclick="go('beneficio')">🏆 Faltan ${fmt0(pend)} del ${pctBenef()}%</button>`:''}
+    </div>
+    <p class="help">¿Se ha perdido el hilo de lo que hay dentro? Cuenta el dinero físico, dale a <b>Contar la caja</b> y escribe lo que hay de verdad: la app anota el ajuste y sigue desde ahí, sin borrar nada.</p>
+  </div>
+
+  <div class="card"><div class="h-row"><h3>Todo lo que ha tocado la caja</h3><span class="tot">Saldo<b style="color:var(--blue)">${fmt(caja)}</b></span></div>
+    ${cajaTable(movs)}</div>`;
+}
+function cajaTable(movs){
+  movs=[...movs].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||((b.actualizado||0)-(a.actualizado||0))||(b.id||'').localeCompare(a.id||''));
+  if(!movs.length) return `<div class="empty">La caja está vacía de movimientos. Empieza con “Meter dinero en la caja”.</div>`;
+  let saldo=0;
+  const asc=[...movs].reverse().map(t=>{saldo=round2(saldo+efectoCaja(t));return {t,saldo};}).reverse();
+  return `<table><thead><tr><th>Fecha</th><th>Concepto</th><th>Origen</th><th>Quién</th><th class="rt">Efecto</th><th class="rt">Saldo</th><th></th></tr></thead><tbody>`+
+  asc.map(({t,saldo})=>{
+    const e=efectoCaja(t), i=tipoInfo(t.tipo);
+    return `<tr><td class="tblq">${fdate(t.fecha)}</td><td>${esc(t.categoria)}</td>
+      <td><span class="pill ${i.pill}">${i.ic} ${t.tipo}</span></td><td>${esc(t.quien)}</td>
+      <td class="rt mono ${e>=0?'pos':'neg'}">${e>=0?'+':'−'}${fmt(Math.abs(e)).replace('€','€ ')}</td>
+      <td class="rt mono" style="color:var(--blue)">${fmt(saldo)}</td>
+      <td class="rt"><div class="rowbtns" style="justify-content:flex-end">
+        <button title="Editar" onclick="openEntry(null,'${t.id}')">✎</button>
+        <button class="del" title="Borrar" onclick="delTx('${t.id}')">🗑</button></div></td></tr>`;
+  }).join('')+`</tbody></table>`;
+}
+function arqueo(){
+  const actual=cajaBalance();
+  const bg=document.getElementById('genModal');
+  bg.innerHTML=`<div class="modal">
+    <div class="modal-h"><svg width="28" height="28"><use href="#pigIcon"/></svg><h3>Arqueo de caja</h3><button class="x" onclick="cerrarGen()">✕</button></div>
+    <div class="modal-b">
+      <p class="help" style="margin-bottom:14px">Saca el bote, cuenta el dinero físico que hay dentro y escríbelo aquí.
+      La app apuntará sola el ajuste que haga falta. <b>No se borra nada</b>: queda el rastro de que hoy se contó.</p>
+      <div class="resline"><span class="rn">La app dice que debería haber</span><span class="rv" style="color:var(--blue)">${fmt(actual)}</span></div>
+      <div class="field" style="margin-top:16px"><label>Dinero contado de verdad (€)</label>
+        <input type="number" step="0.01" id="arqReal" value="${actual.toFixed(2)}" oninput="arqPreview(${actual})"></div>
+      <div class="field"><label>Nota (opcional)</label>
+        <input id="arqNota" placeholder="Ej. contado por los dos después del bolo"></div>
+      <div id="arqPrev" class="help"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn" onclick="cerrarGen()">Cancelar</button>
+      <button class="btn gold" onclick="arqueoOk(${actual})">Guardar arqueo</button>
+    </div></div>`;
+  bg.classList.add('show');
+  arqPreview(actual);
+  setTimeout(()=>{const e=document.getElementById('arqReal');if(e){e.focus();e.select();}},80);
+}
+function cerrarGen(){document.getElementById('genModal').classList.remove('show');}
+function arqPreview(actual){
+  const el=document.getElementById('arqPrev'); if(!el) return;
+  const real=parseFloat(document.getElementById('arqReal').value);
+  if(isNaN(real)){el.textContent='';return;}
+  const dif=round2(real-actual);
+  el.innerHTML = Math.abs(dif)<0.005
+    ? `<b style="color:var(--green)">La caja cuadra perfecta ✓</b> No hará falta ningún ajuste.`
+    : `Se apuntará un ajuste de <b style="color:${dif>0?'var(--green)':'var(--red)'}">${dif>0?'+':''}${fmt(dif)}</b> ${dif>0?'(había más de lo que decía la app)':'(faltaba dinero respecto a la app)'}.`;
+}
+function arqueoOk(actual){
+  const real=parseFloat(document.getElementById('arqReal').value);
+  if(isNaN(real)){toast('Escribe cuánto has contado','err');return;}
+  const nota=(document.getElementById('arqNota').value||'').trim();
+  const dif=round2(real-actual);
+  cerrarGen();
+  if(Math.abs(dif)<0.005){toast('La caja cuadra perfecta ✓','ok');return;}
+  state.transactions.push({
+    fecha:todayISO(), mes:mesFromDate(todayISO()), tipo:'Pá la Caja',
+    categoria:`Arqueo de caja${nota?' · '+nota:''} (contado ${fmt(real)})`,
+    quien:'Altillo', importe:dif, id:Date.now()+''+Math.floor(Math.random()*999),
+    estado:'', destino:'', pagado:'', origen:'', benef:'', actualizado:Date.now()
+  });
+  save();renderAll();autoPush();
+  toast(`Caja ajustada: ${dif>0?'sobraban':'faltaban'} ${fmt(Math.abs(dif))}`, dif>0?'ok':'info');
+}
+
+/* ================= BENEFICIO 10% ================= */
+function viewBeneficio(){
+  const txs=seasonTx();
+  const pend=apartadosPendientes(txs), hechos=apartadosHechos(txs);
+  const fondo=fondoBeneficio(txs), falta=beneficioPendiente(txs);
+  const tickets = pend.length? `<div class="tickets">`+pend.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(t=>`
+      <div class="ticket benef">
+        <div class="tk-top"><span class="tk-cat" title="${esc(t.categoria)}">${esc(t.categoria)}</span><span class="tk-date">${fdate(t.fecha)}</span></div>
+        <div class="tk-big" style="color:var(--purple)">${fmt(apartadoDe(t))}</div>
+        <div class="tk-sub">${pctBenef()}% de ${fmt(t.importe)} · cobró ${esc(t.quien)}${t.destino==='caja'?' · entró en la caja':''}</div>
+        <div class="tk-acts">
+          ${t.destino==='caja'
+            ? `<button class="btn gold" onclick="resolverApartado('${t.id}','ya')">✓ Ya está dentro de la caja</button>
+               <button class="tk-link" onclick="resolverApartado('${t.id}','mover')">Lo meto aparte</button>`
+            : `<button class="btn gold" onclick="resolverApartado('${t.id}','mover')">🐷 Ya lo he metido en la caja</button>
+               <button class="tk-link" onclick="resolverApartado('${t.id}','ya')">Ya estaba dentro</button>`}
+        </div>
+      </div>`).join('')+`</div>`
+    : `<div class="empty">🏆 No queda ningún ingreso sin apartar su ${pctBenef()}%. Bien hecho.</div>`;
+  const hist = hechos.length? `<table><thead><tr><th>Fecha</th><th>Ingreso</th><th>Quién</th><th class="rt">Ingreso</th><th class="rt">Apartado ${pctBenef()}%</th><th></th></tr></thead><tbody>`+
+    hechos.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(t=>`<tr><td class="tblq">${fdate(t.fecha)}</td><td>${esc(t.categoria)}</td><td>${esc(t.quien)}</td>
+      <td class="rt mono">${fmt(t.importe)}</td><td class="rt mono" style="color:var(--gold)">${fmt(apartadoDe(t))}</td>
+      <td class="rt"><button class="tk-link" onclick="reabrirApartado('${t.id}')">deshacer</button></td></tr>`).join('')+
+    `</tbody></table>`:`<div class="empty">Todavía no has apartado ningún beneficio.</div>`;
+  return `
+  <div class="grid kpis" style="grid-template-columns:repeat(3,1fr)">
+    ${kpiCard('Bote de beneficio',fondo,'var(--gold)','🏆',`${hechos.length} ingresos ya apartados`)}
+    ${kpiCard('Falta por apartar',falta,falta>0?'var(--red)':'var(--txt3)','⏳',`${pend.length} fichas abiertas`)}
+    ${kpiCard('Total generado',round2(fondo+falta),'var(--purple)','📈',`${pctBenef()}% de todos los ingresos`)}
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="h-row"><h3>Fichas pendientes de ingresar en caja</h3>
+      <span class="tot">Falta<b style="color:var(--red)">${fmt0(falta)}</b></span></div>
+    <p class="help" style="margin:0 0 14px">Cada ingreso genera su ficha con el <b>${pctBenef()}%</b>. La ficha <b>no desaparece</b> hasta que ese dinero está dentro de la caja.</p>
+    ${tickets}
+  </div>
+  <div class="card"><div class="h-row"><h3>Historial de apartados</h3><span class="tot">Total<b style="color:var(--gold)">${fmt0(fondo)}</b></span></div>${hist}</div>`;
+}
+function resolverApartado(id,modo){
+  const t=state.transactions.find(x=>x.id===id); if(!t) return;
+  if(modo==='mover'){
+    state.transactions.push({
+      fecha:todayISO(), mes:mesFromDate(todayISO()), tipo:'Pá la Caja',
+      categoria:`Beneficio ${pctBenef()}% · ${t.categoria}`, quien:t.quien,
+      importe:apartadoDe(t), id:Date.now()+''+Math.floor(Math.random()*999),
+      estado:'', destino:'', pagado:'', origen:t.id, benef:'', actualizado:Date.now()
+    });
+    toast(`${fmt(apartadoDe(t))} apartados al bote ✓`,'ok');
+  }else{
+    t.benef='ya'; t.actualizado=Date.now();
+    toast('Ficha cerrada: ese dinero ya estaba en la caja ✓','ok');
+  }
+  save();renderAll();autoPush();
+}
+function reabrirApartado(id){
+  const t=state.transactions.find(x=>x.id===id); if(!t) return;
+  if(!confirm('¿Reabrir esta ficha? Se quitará el apartado del bote de beneficio.'))return;
+  t.benef=''; t.actualizado=Date.now();
+  const mov=state.transactions.filter(x=>x.origen===id);
+  mov.forEach(m=>{state.meta.recentlyDeleted.push(m.id);});
+  state.transactions=state.transactions.filter(x=>x.origen!==id);
+  save();renderAll();autoPush();toast('Ficha reabierta','info');
+}
+
+/* ================= PAGUEN PARSEROS ================= */
+function viewParseros(){
+  const txs=seasonTx().filter(t=>t.tipo==='Paguen Parseros');
+  const pend=txs.filter(t=>t.estado!=='Pagado'), pagadas=txs.filter(t=>t.estado==='Pagado');
+  const totPend=sumImp(pend), totPag=sumImp(pagadas);
+  const tickets = pend.length? `<div class="tickets">`+pend.sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||'')).map(t=>`
+    <div class="ticket aviso">
+      <div class="tk-top"><span class="tk-cat" title="${esc(t.categoria)}">${esc(t.categoria)}</span><span class="tk-date">${fdate(t.fecha)}</span></div>
+      <div class="tk-big" style="color:var(--amber)">${fmt(t.importe)}</div>
+      <div class="tk-sub">Aviso · todavía NO cuenta como gasto · ${esc(t.quien)}</div>
+      <div class="tk-acts">
+        <button class="btn gold" onclick="pagarParsero('${t.id}')">✓ Ya está pagado</button>
+        <button class="tk-link" onclick="openEntry(null,'${t.id}')">editar</button>
+        <button class="tk-link" onclick="delTx('${t.id}')">borrar</button>
+      </div>
+    </div>`).join('')+`</div>` : `<div class="empty">Ningún aviso pendiente. Cuando sepas de un gasto que vendrá, apúntalo aquí y no se os olvidará.</div>`;
+  const hist = pagadas.length? `<table><thead><tr><th>Fecha</th><th>Concepto</th><th>Quién</th><th class="rt">Importe</th><th>Pagado</th><th></th></tr></thead><tbody>`+
+    pagadas.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(t=>`<tr><td class="tblq">${fdate(t.fecha)}</td><td>${esc(t.categoria)}</td><td>${esc(t.quien)}</td>
+      <td class="rt mono neg">${fmt(t.importe)}</td><td><span class="badge ok">ya es gasto${t.pagado==='caja'?' · de la caja':''}</span></td>
+      <td class="rt"><button class="tk-link" onclick="pagarParsero('${t.id}',true)">deshacer</button></td></tr>`).join('')+`</tbody></table>`
+    : `<div class="empty">Nada pagado todavía.</div>`;
+  return `
+  <div class="grid kpis" style="grid-template-columns:repeat(2,1fr)">
+    ${kpiCard('Avisos pendientes',totPend,totPend>0?'var(--amber)':'var(--txt3)','⚠️',`${pend.length} avisos · aún no son gasto`)}
+    ${kpiCard('Ya pagados',totPag,'var(--green)','✅',`${pagadas.length} convertidos en gasto`)}
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="h-row"><h3>Avisos abiertos</h3><button class="btn gold" onclick="openEntry('Paguen Parseros')">+ Nuevo aviso</button></div>
+    <p class="help" style="margin:0 0 14px">Un aviso es dinero que <b>sabéis que vais a tener que pagar</b>. No resta de los números hasta que le des a “Ya está pagado”: en ese momento se convierte en gasto con el concepto que pusiste.</p>
+    ${tickets}
+  </div>
+  <div class="card"><div class="h-row"><h3>Historial de avisos pagados</h3></div>${hist}</div>`;
+}
+function pagarParsero(id,undo){
+  const t=state.transactions.find(x=>x.id===id); if(!t) return;
+  if(undo){
+    t.estado='Pendiente'; t.pagado=''; t.actualizado=Date.now();
+    save();renderAll();autoPush();toast('Vuelve a ser solo un aviso','info');return;
+  }
+  const deCaja=confirm(`Vas a convertir "${t.categoria}" (${fmt(t.importe)}) en un gasto real.\n\nAceptar = se pagó con dinero de la CAJA\nCancelar = se pagó por banco o del bolsillo`);
+  t.estado='Pagado'; t.pagado=deCaja?'caja':'banco'; t.fechaPago=todayISO(); t.actualizado=Date.now();
+  save();renderAll();autoPush();
+  toast(`Pagado ✓ ya cuenta como gasto${deCaja?' y sale de la caja':''}`,'ok');
+}
+/* aviso al abrir la app */
+function avisoInicio(){
+  const pend=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
+  const benefPend=apartadosPendientes();
+  if(!pend.length&&!benefPend.length) return;
+  const bg=document.getElementById('avisoModal');
+  bg.innerHTML=`<div class="modal">
+    <div class="modal-h"><svg width="30" height="30"><use href="#pigIcon"/></svg><h3>Antes de nada…</h3><button class="x" onclick="cerrarAviso()">✕</button></div>
+    <div class="modal-b">
+      ${pend.length?`<h3 style="font-family:'Barlow Condensed';font-size:18px;letter-spacing:1px;margin-bottom:8px;color:var(--amber)">⚠️ PAGUEN PARSEROS · ${pend.length} aviso${pend.length>1?'s':''}</h3>
+        <p class="help" style="margin:0 0 10px">Gastos que vendrán y que todavía no cuentan como gasto:</p>
+        ${pend.map(t=>`<div class="resline"><span class="rn">${esc(t.categoria)} <span class="muted">· ${esc(t.quien)} · ${fdate(t.fecha)}</span></span>
+          <span class="rv" style="color:var(--amber)">${fmt(t.importe)}</span></div>`).join('')}
+        <div class="tot-line"><span class="tl">Total por venir</span><span class="tv" style="color:var(--amber)">${fmt(sumImp(pend))}</span></div>`:''}
+      ${benefPend.length?`<h3 style="font-family:'Barlow Condensed';font-size:18px;letter-spacing:1px;margin:18px 0 8px;color:var(--purple)">🏆 BENEFICIO · ${benefPend.length} ficha${benefPend.length>1?'s':''} sin ingresar</h3>
+        <p class="help" style="margin:0 0 10px">Falta meter en la caja <b>${fmt(beneficioPendiente())}</b> del ${pctBenef()}% de los ingresos.</p>`:''}
+    </div>
+    <div class="modal-f">
+      ${benefPend.length?`<button class="btn" onclick="cerrarAviso();go('beneficio')">Ver fichas del ${pctBenef()}%</button>`:''}
+      ${pend.length?`<button class="btn" onclick="cerrarAviso();go('parseros')">Ver avisos</button>`:''}
+      <button class="btn gold" onclick="cerrarAviso()">Vale, entendido</button>
+    </div></div>`;
+  bg.classList.add('show');
+}
+function cerrarAviso(){document.getElementById('avisoModal').classList.remove('show');}
+
+/* ================= MOVIMIENTOS ================= */
+function viewMovimientos(){
+  const txs=periodTx();
+  return `
+  <div class="toolbar">
+    <input type="search" id="txSearch" placeholder="Buscar por concepto, tipo o persona…" oninput="filterTable()">
+    <select id="txTipo" onchange="filterTable()">
+      <option value="">Todos los tipos</option>${Object.keys(TIPOS).map(t=>`<option>${t}</option>`).join('')}
+    </select>
+    <select id="txQuien" onchange="filterTable()">
+      <option value="">Todos</option>${QUIENES.map(q=>`<option>${q}</option>`).join('')}
+    </select>
+    <button class="btn gold" onclick="openEntry()">+ Añadir</button>
+  </div>
+  <div class="card" style="padding:8px 8px 6px"><div id="txTableWrap">${txTable(txs,true)}</div></div>`;
+}
+function txTable(txs,full){
+  txs=[...txs].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||((b.actualizado||0)-(a.actualizado||0))||(b.id||'').localeCompare(a.id||''));
+  if(!txs.length) return `<div class="empty">
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <div>No hay movimientos en este periodo.</div></div>`;
+  return `<table id="theTable"><thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Quién</th><th class="rt">Importe</th><th></th></tr></thead><tbody>`+
+  txs.map(t=>{
+    const i=tipoInfo(t.tipo), imp=+t.importe||0;
+    let signo='', cls='';
+    if(t.tipo==='Ingreso'){signo='+';cls='pos';}
+    else if(t.tipo==='Pá la Caja'){signo=imp>=0?'+':'−';cls=imp>=0?'pos':'neg';}
+    else if(t.tipo==='Paguen Parseros'){signo=t.estado==='Pagado'?'−':'⏳';cls=t.estado==='Pagado'?'neg':'muted';}
+    else {signo='−';cls='neg';}
+    const tags=[
+      t.destino==='caja'?'<span class="badge ok">a caja</span>':'',
+      t.destino==='pendiente'?'<span class="badge pend">sin meter en caja</span>':'',
+      t.destino==='banco'?'<span class="badge ok" style="background:rgba(59,130,246,.15);color:#7aa8ff">banco</span>':'',
+      t.pagado==='caja'?'<span class="badge pend" style="background:rgba(59,130,246,.15);color:#7aa8ff">pagado de la caja</span>':'',
+      (t.tipo==='Paguen Parseros'&&t.estado==='Pagado')?'<span class="badge ok">pagado</span>':'',
+      (t.tipo==='Ingreso'&&!apartadoResuelto(t))?`<span class="badge pend">falta ${pctBenef()}%</span>`:''
+    ].join(' ');
+    return `<tr data-s="${esc((t.categoria+' '+t.tipo+' '+t.quien).toLowerCase())}" data-tipo="${esc(t.tipo)}" data-quien="${esc(t.quien)}">
+      <td class="tblq">${fdate(t.fecha)}</td>
+      <td><span class="pill ${i.pill}">${i.ic} ${esc(t.tipo)}</span></td>
+      <td>${esc(t.categoria)} ${tags}</td>
+      <td>${esc(t.quien)}</td>
+      <td class="rt mono ${cls}">${signo}${fmt(Math.abs(imp)).replace('€','€ ')}</td>
+      <td class="rt"><div class="rowbtns" style="justify-content:flex-end">
+        <button title="Editar" onclick="openEntry(null,'${t.id}')">✎</button>
+        <button class="del" title="Borrar" onclick="delTx('${t.id}')">🗑</button></div></td></tr>`;}).join('')+
+  `</tbody></table>`;
+}
+function filterTable(){
+  const q=(document.getElementById('txSearch')?.value||'').toLowerCase();
+  const tp=document.getElementById('txTipo')?.value||'', qn=document.getElementById('txQuien')?.value||'';
+  document.querySelectorAll('#theTable tbody tr').forEach(tr=>{
+    const okQ=!q||tr.dataset.s.includes(q), okT=!tp||tr.dataset.tipo===tp, okN=!qn||tr.dataset.quien===qn;
+    tr.style.display=(okQ&&okT&&okN)?'':'none';
+  });
+}
+function fdate(iso){if(!iso)return '—';const d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});}
+
+/* ================= DAVID & ARIANA ================= */
+function viewPersonas(){
+  const txs=periodTx();
+  const cards=['David','Ariana','Altillo'].map(p=>{
+    const s=personaStats(p,txs);
+    const col=p==='David'?'var(--cyan)':p==='Ariana'?'var(--purple)':'var(--gold)';
+    const ic=p==='David'?'🎸':p==='Ariana'?'🎙️':'🏠';
+    const debtCol=s.debe>0?'var(--red)':'var(--green)';
+    return `<div class="card">
+      <div class="per-head"><span class="per-av" style="background:${col}22;color:${col}">${ic}</span>
+        <div><div class="pn">${p}</div><div class="ps">${s.n} movimientos a su nombre</div></div></div>
+      ${resLine('💰','Ingresos que ha traído',s.ingresos,'var(--green)')}
+      ${p==='Altillo'?'':resLine('🎤','Cachés cobrados de Altillo',s.cobrado,'var(--cyan)')}
+      ${resLine('🧾','Gastos a su nombre',s.gastos,'var(--red)')}
+      ${resLine('🐷','Metido en la caja',s.metidoEnCaja,'var(--blue)')}
+      ${s.sacadoDeCaja?resLine('✂️','Sacado de la caja',s.sacadoDeCaja,'var(--amber)'):''}
+      <div class="debt-box">
+        <div class="dl">${p==='Altillo'?'Pendiente de colocar':'Debe a Altillo'}</div>
+        <div class="dv" style="color:${debtCol}">${fmt(s.debe)}</div>
+        <div class="dd">${s.debe>0
+          ? `${s.debeBolsillo>0?`${fmt(s.debeBolsillo)} cobrados y sin meter en caja`:''}${(s.debeBolsillo>0&&s.debe10>0)?' · ':''}${s.debe10>0?`${fmt(s.debe10)} del ${pctBenef()}% por apartar`:''}`
+          : 'Todo cuadrado ✓'}</div>
+      </div>
+      ${s.debe>0?`<div class="tk-acts" style="margin-top:10px">
+        ${s.enBolsillo.length?`<button class="btn" onclick="marcarEnCaja('${p}')">Ya lo he metido todo en la caja</button>`:''}
+        ${s.pend10.length?`<button class="btn ghost" onclick="go('beneficio')">Ver fichas del ${pctBenef()}%</button>`:''}</div>`:''}
+    </div>`;
+  }).join('');
+  // comparativa
+  const d=personaStats('David',txs), a=personaStats('Ariana',txs);
+  return `
+  <div class="pergrid" style="margin-bottom:16px">${cards}</div>
+  <div class="grid layout-2">
+    <div class="card"><div class="h-row"><h3>Comparativa David / Ariana</h3></div>
+      <div class="chart-wrap" style="height:250px"><canvas id="chPer"></canvas></div></div>
+    <div class="card"><div class="h-row"><h3>Quién debe qué</h3></div>
+      ${resLine('🎸','David debe a Altillo',d.debe,d.debe>0?'var(--red)':'var(--green)')}
+      ${resLine('🎙️','Ariana debe a Altillo',a.debe,a.debe>0?'var(--red)':'var(--green)')}
+      ${resLine('🧾','Gastos adelantados por David',d.adelantado,'var(--amber)')}
+      ${resLine('🧾','Gastos adelantados por Ariana',a.adelantado,'var(--amber)')}
+      <p class="help">“Debe a Altillo” = dinero de bolos que todavía tiene esa persona encima + el ${pctBenef()}% de sus ingresos que aún no ha entrado en la caja.</p>
+    </div>
+  </div>`;
+}
+function marcarEnCaja(p){
+  const list=seasonTx().filter(t=>t.quien===p&&t.tipo==='Ingreso'&&t.destino==='pendiente');
+  if(!list.length) return;
+  if(!confirm(`¿${p} ha metido en la caja los ${fmt(sumImp(list))} de ${list.length} ingreso(s)?`))return;
+  list.forEach(t=>{t.destino='caja';t.actualizado=Date.now();});
+  save();renderAll();autoPush();toast('Dinero colocado en la caja ✓','ok');
+}
+
+/* ================= REPORTES ================= */
+function viewReportes(){
+  const serie=serieMensual();
+  const totales=agg(seasonTx());
+  const filas=serie.map(s=>`<tr><td><b>${mesLabel(s.k)}</b></td>
+    <td class="rt mono pos">${fmt(s.ingresos)}</td><td class="rt mono neg">${fmt(s.gastos)}</td>
+    <td class="rt mono" style="color:var(--cyan)">${fmt(s.cache)}</td>
+    <td class="rt mono" style="color:${s.beneficio>=0?'var(--purple)':'var(--red)'}">${fmt(s.beneficio)}</td></tr>`).join('');
+  const personas=['David','Ariana'].map(p=>{
+    const s=personaStats(p,seasonTx());
+    return `<div class="card"><div class="h-row"><h3>${p}</h3></div>
+      ${resLine('💰','Ingresos traídos',s.ingresos,'var(--green)')}
+      ${resLine('🎤','Cachés cobrados',s.cobrado,'var(--cyan)')}
+      ${resLine('🧾','Gastos a su nombre',s.gastos,'var(--red)')}
+      ${resLine('🤝','Debe a Altillo',s.debe,s.debe>0?'var(--red)':'var(--green)')}</div>`;
+  }).join('');
+  return `
+  <div class="card" style="margin-bottom:16px">
+    <div class="h-row"><h3>Resumen mensual · ${TEMPORADAS[state.ui.temporada].label}</h3>
+      <span class="tot">Beneficio<b style="color:${totales.beneficio>=0?'var(--purple)':'var(--red)'}">${fmt0(totales.beneficio)}</b></span></div>
+    <table><thead><tr><th>Mes</th><th class="rt">Ingresos</th><th class="rt">Gastos</th><th class="rt">De eso, cachés</th><th class="rt">Beneficio</th></tr></thead>
+    <tbody>${filas}<tr style="border-top:2px solid var(--line2)"><td><b>TOTAL</b></td>
+      <td class="rt mono pos"><b>${fmt(totales.ingresos)}</b></td><td class="rt mono neg"><b>${fmt(totales.gastos)}</b></td>
+      <td class="rt mono" style="color:var(--cyan)"><b>${fmt(totales.cache)}</b></td>
+      <td class="rt mono"><b style="color:${totales.beneficio>=0?'var(--purple)':'var(--red)'}">${fmt(totales.beneficio)}</b></td></tr></tbody></table>
+  </div>
+  <div class="grid layout-2">${personas}</div>`;
+}
+
+/* ================= METAS ================= */
+function viewMetas(){
+  return `<div class="settings-block">
+    <div class="card"><div class="h-row"><h3>Objetivos de la temporada</h3></div>${metasHtml()}</div>
+    <div class="card"><div class="h-row"><h3>Editar objetivos</h3></div>
+      ${state.meta.metas.map((m,i)=>`<div class="field-row" style="align-items:end;margin-bottom:12px">
+        <div class="field" style="margin:0"><label>Nombre</label><input value="${esc(m.nombre)}" onchange="state.meta.metas[${i}].nombre=this.value;save()"></div>
+        <div class="field" style="margin:0"><label>Objetivo (€) · mide: ${m.tipo}</label><input type="number" value="${m.objetivo}" onchange="state.meta.metas[${i}].objetivo=+this.value;save();renderAll()"></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+</script>
+<script>
+/* ============================================================= */
+/*  DATOS & BACKUP + SYNC                                        */
+/* ============================================================= */
+function viewDatos(){
+  const sy=state.meta.sync;
+  const lastSync=sy.last?new Date(sy.last).toLocaleString('es-ES'):'nunca';
+  const t1=state.transactions.filter(t=>temporadaDe(t.fecha)==='T1');
+  return `<div class="settings-block">
+    <div class="card">
+      <div class="h-row"><h3>Temporada</h3></div>
+      <p class="help">La <b>Temporada 2</b> va del <b>18/09/2026</b> al <b>18/09/2027</b>. Todo lo anterior está archivado: no suma, no resta y no aparece en ninguna vista. Lo único que se arrastró de la Temporada 1 es el <b>dinero real que había en la caja</b>.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn ${state.ui.temporada==='T2'?'gold':''}" onclick="setSeason('T2')">Temporada 2 (actual)</button>
+        <button class="btn" onclick="setSeason('T1')">Ver archivo T1 (${t1.length} movimientos)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h-row"><h3>Beneficio de Altillo</h3></div>
+      <p class="help">De cada ingreso se aparta este porcentaje al bote de Altillo. Se hace <b>antes</b> de repartir cachés.</p>
+      <div class="field" style="max-width:220px;margin-top:12px"><label>Porcentaje (%)</label>
+        <input type="number" min="0" max="100" step="1" value="${pctBenef()}" onchange="state.meta.pctBeneficio=+this.value||0;save();renderAll();toast('Porcentaje actualizado','ok')"></div>
+    </div>
+
+    <div class="card">
+      <div class="h-row"><h3>Sincronización automática con Drive</h3></div>
+      <p class="help">Pega la URL del <b>Web App de Apps Script</b> (código en <span class="code">apps-script-sync.gs</span>). Ojo: con los campos nuevos (Destino, Pagado, Origen, Benef) hay que volver a pegar el script y crear una <b>nueva versión</b> del despliegue.</p>
+      <div class="field" style="margin-top:12px"><label>URL del Web App (/exec)</label><input id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(sy.url||'')}"></div>
+      <div class="field"><label>Token</label><input id="syncToken" placeholder="altillo-2026" value="${esc(sy.token||'')}"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" onclick="saveSync()">Guardar conexión</button>
+        <button class="btn gold" onclick="pullFromDrive()">⬇ Traer de Drive</button>
+        <button class="btn" onclick="pushToDrive()">⬆ Enviar a Drive</button>
+      </div>
+      <p class="help" style="margin-top:10px"><span class="status-dot" style="background:${sy.url?'var(--green)':'var(--txt3)'}"></span>${sy.url?'Conectado · auto-actualiza cada ~90s':'Sin configurar'} · Última sincronización: ${lastSync}</p>
+    </div>
+
+    <div class="card">
+      <div class="h-row"><h3>Backup manual (Excel / CSV)</h3></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn gold" onclick="exportXlsx()">⬇ Exportar Excel (.xlsx)</button>
+        <button class="btn" onclick="exportCsv()">⬇ Exportar CSV</button>
+        <label class="btn" style="cursor:pointer">⬆ Importar Excel<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importFile(event)"></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h-row"><h3>Recordatorio quincenal</h3></div>
+      <div class="resline"><span class="rn">Alarma sonora cuando toca rellenar</span>
+        <label class="switch"><input type="checkbox" ${state.meta.alarma?'checked':''} onchange="state.meta.alarma=this.checked;save()"> activar</label></div>
+      <div class="resline"><span class="rn">Notificaciones del navegador</span>
+        <button class="btn ghost" style="padding:5px 12px" onclick="askNotif()">${state.meta.notif?'Activadas ✓':'Activar'}</button></div>
+      <div class="resline"><span class="rn">Marcar como rellenado hoy</span>
+        <button class="btn" style="padding:5px 12px" onclick="resetRelleno();toast('Relleno confirmado ✓','ok')">Confirmar relleno</button></div>
+    </div>
+
+    <div class="card">
+      <div class="h-row"><h3>Zona peligrosa</h3></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn danger" onclick="vaciarT2()">Vaciar la Temporada 2 (deja la caja)</button>
+      </div>
+      <p class="help">Borra los movimientos de esta temporada pero conserva el saldo inicial de la caja. El archivo de la Temporada 1 no se toca.</p>
+    </div>
+  </div>`;
+}
+function vaciarT2(){
+  if(!confirm('¿Seguro? Se borran TODOS los movimientos de la Temporada 2 menos el saldo inicial de caja.'))return;
+  const fuera=state.transactions.filter(t=>temporadaDe(t.fecha)==='T2'&&t.id!==SALDO_INICIAL_ID);
+  fuera.forEach(t=>state.meta.recentlyDeleted.push(t.id));
+  state.meta.recentlyDeleted=state.meta.recentlyDeleted.slice(-400);
+  state.transactions=state.transactions.filter(t=>!(temporadaDe(t.fecha)==='T2'&&t.id!==SALDO_INICIAL_ID));
+  save();renderAll();autoPush();toast('Temporada 2 vaciada','info');
+}
+function saveSync(){state.meta.sync.url=document.getElementById('syncUrl').value.trim();state.meta.sync.token=document.getElementById('syncToken').value.trim();save();toast('Conexión guardada','ok');renderAll();}
+function askNotif(){
+  if(!('Notification'in window)){toast('Este navegador no soporta notificaciones','err');return;}
+  Notification.requestPermission().then(p=>{state.meta.notif=(p==='granted');save();renderAll();toast(p==='granted'?'Notificaciones activadas':'Permiso denegado',p==='granted'?'ok':'err');});
+}
+async function pushToDrive(){
+  const {url,token}=state.meta.sync; if(!url){toast('Configura primero la URL','err');return;}
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'push',token,transactions:state.transactions})});
+    const j=await r.json();
+    if(j.ok){state.meta.sync.last=new Date().toISOString();save();toast('Guardado en Drive ✓ ('+j.count+' filas)','ok');}
+    else toast('Drive: '+(j.error||'error'),'err');
+  }catch(e){toast('No se pudo conectar con Drive','err');}
+}
+async function pullFromDrive(){
+  const {url,token}=state.meta.sync; if(!url){toast('Configura primero la URL','err');return;}
+  toast('Trayendo de Drive…','info');
+  try{
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'token='+encodeURIComponent(token));
+    const j=await r.json();
+    if(j.ok&&Array.isArray(j.transactions)){
+      state.transactions=j.transactions.map(normalizeTx);
+      migrarT2();
+      state.meta.sync.last=new Date().toISOString();save();renderAll();toast('Datos traídos de Drive ✓ ('+state.transactions.length+')','ok');
+    }else toast('Drive: '+(j.error||'sin datos'),'err');
+  }catch(e){toast('No se pudo conectar con Drive','err');}
+}
+function normalizeTx(t){
+  let tipo=t.tipo||t.Tipo||'Gasto Variable';
+  tipo=TIPOS_LEGACY[tipo]||tipo;
+  let quien=t.quien||t['Quién']||t.Quien||'Altillo';
+  if(quien==='Otro') quien='Altillo';
+  return {
+    fecha: (t.fecha||t.Fecha||'').toString().slice(0,10),
+    mes: (t.mes||t.Mes||'').toString().toUpperCase(),
+    tipo, quien,
+    categoria: (t.categoria||t['Categoría']||t.Categoria||'').toString().trim(),
+    importe: +(t.importe||t.Importe||0),
+    id: (t.id||t.ID||Date.now()+''+Math.random()).toString(),
+    estado: t.estado||t.Estado||'',
+    destino: t.destino||t.Destino||'',
+    pagado: t.pagado||t.Pagado||'',
+    origen: (t.origen||t.Origen||'').toString(),
+    benef: t.benef||t.Benef||'',
+    actualizado: +(t.actualizado||t.Actualizado||0)
+  };
+}
+function mergeRemote(remoteTxs){
+  const deleted=new Set(state.meta.recentlyDeleted||[]);
+  const byId=new Map(state.transactions.map(t=>[t.id,t]));
+  let changed=0;
+  remoteTxs.forEach(rt=>{
+    if(deleted.has(rt.id)) return;
+    const lt=byId.get(rt.id);
+    if(!lt){ state.transactions.push(rt); byId.set(rt.id,rt); changed++; }
+    else if((rt.actualizado||0) > (lt.actualizado||0)){ Object.assign(lt, rt); changed++; }
+  });
+  return changed;
+}
+async function syncPull(silent){
+  const {url,token}=state.meta.sync; if(!url) return false;
+  try{
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'token='+encodeURIComponent(token));
+    const j=await r.json();
+    if(j.ok&&Array.isArray(j.transactions)){
+      const n=mergeRemote(j.transactions.map(normalizeTx));
+      state.meta.sync.last=new Date().toISOString();
+      if(n>0){ save(); renderAll(); if(!silent) toast('Datos actualizados desde Drive ✓','ok'); }
+      else{ save(); if(!silent) toast('Ya estabas al día','ok'); }
+      return true;
+    }
+  }catch(e){ if(!silent) toast('No se pudo conectar con Drive','err'); }
+  return false;
+}
+async function autoPush(){ if(!state.meta.sync.url) return; await syncPull(true); pushToDrive(); }
+
+/* ---------- IMPORT / EXPORT ---------- */
+function txToAoA(){
+  const head=['Fecha','Mes','Tipo','Categoría','Quién','Importe','ID','Estado','Destino','Pagado','Origen','Benef','Actualizado'];
+  const rows=state.transactions.map(t=>[t.fecha,t.mes,t.tipo,t.categoria,t.quien,t.importe,t.id,t.estado||'',t.destino||'',t.pagado||'',t.origen||'',t.benef||'',t.actualizado||0]);
+  return [head,...rows];
+}
+function exportXlsx(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(txToAoA());
+  ws['!cols']=[{wch:12},{wch:11},{wch:16},{wch:30},{wch:10},{wch:10},{wch:16},{wch:10},{wch:10},{wch:10},{wch:16},{wch:8},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'Datos_App');
+  XLSX.writeFile(wb,'ALTILLO_Dineros_T2.xlsx');
+  toast('Excel exportado ✓','ok');
+}
+function exportCsv(){
+  const csv=txToAoA().map(r=>r.map(c=>`"${(c??'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ALTILLO_Dineros_T2.csv';a.click();
+  toast('CSV exportado ✓','ok');
+}
+function importFile(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const sheet=wb.Sheets['Datos_App']||wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+      const parsed=rows.map(r=>{
+        let fecha=r.Fecha||r.fecha||'';
+        if(typeof fecha==='number'){const dt=XLSX.SSF.parse_date_code(fecha);if(dt)fecha=`${dt.y}-${String(dt.m).padStart(2,'0')}-${String(dt.d).padStart(2,'0')}`;}
+        fecha=(fecha||'').toString().slice(0,10);
+        return normalizeTx({...r,fecha,mes:(r.Mes||r.mes||(fecha?mesFromDate(fecha):''))});
+      }).filter(t=>t.importe||t.categoria);
+      if(!parsed.length){toast('No encontré filas válidas','err');return;}
+      const rep=confirm(`He leído ${parsed.length} filas.\n\nAceptar = REEMPLAZAR todo\nCancelar = COMBINAR con lo existente`);
+      if(rep) state.transactions=parsed;
+      else{
+        const ids=new Set(state.transactions.map(t=>t.id));
+        parsed.forEach(t=>{if(!ids.has(t.id))state.transactions.push(t);});
+      }
+      save();renderAll();toast('Importado ✓','ok');
+    }catch(err){toast('Error al leer el archivo','err');}
+  };
+  rd.readAsBinaryString(f);ev.target.value='';
+}
+
+/* ============================================================= */
+/*  FORMULARIO DE ENTRADA                                        */
+/* ============================================================= */
+let editingId=null;
+function openEntry(preTipo,id,dir){
+  editingId=id||null;
+  const t=id?state.transactions.find(x=>x.id===id):null;
+  const tipoSel=t?t.tipo:(preTipo||'Gasto Variable');
+  const imp=t?Math.abs(+t.importe||0):'';
+  window._tipoSel=tipoSel;
+  window._whoSel=t?t.quien:'David';
+  window._dirSel=(t&&t.tipo==='Pá la Caja'&&(+t.importe||0)<0)?'out':(dir||'in');
+  const bg=document.getElementById('entryModal');
+  bg.innerHTML=`<div class="modal">
+    <div class="modal-h"><h3>${id?'Editar movimiento':'Nuevo movimiento'}</h3><button class="x" onclick="closeEntry()">✕</button></div>
+    <div class="modal-b">
+      <div class="field"><label>Tipo de movimiento</label>
+        <div class="type-grid" id="typeGrid">
+          ${Object.keys(TIPOS).map(tp=>`<div class="type-opt ${tp===tipoSel?'sel':''}" data-tp="${tp}" onclick="selType('${tp}')"><span class="ti2">${TIPOS[tp].ic}</span>${tp}</div>`).join('')}
+        </div>
+        <p class="help" id="tipoHelp">${TIPOS[tipoSel]?TIPOS[tipoSel].desc:''}</p>
+      </div>
+      <div class="field hide" id="dirField"><label>¿Entra o sale de la caja?</label>
+        <div class="dir-toggle" id="dirTog">
+          <button data-d="in" class="in ${window._dirSel==='in'?'sel':''}" onclick="selDir('in')">⬇ Meter en la caja</button>
+          <button data-d="out" class="out ${window._dirSel==='out'?'sel':''}" onclick="selDir('out')">⬆ Sacar de la caja</button>
+        </div></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha</label><input type="date" id="fFecha" value="${t?t.fecha:todayISO()}"></div>
+        <div class="field"><label>Importe (€)</label><input type="number" step="0.01" min="0" id="fImporte" placeholder="0,00" value="${imp}" oninput="previewBenef()"></div>
+      </div>
+      <div class="field"><label>Concepto</label>
+        <input id="fCat" list="catList" placeholder="Ej. Bolo Sala X, Gasolina, Cassettes…" value="${t?esc(t.categoria):''}">
+        <datalist id="catList">${categoriasUnicas().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      </div>
+      <div class="field"><label>Quién</label>
+        <div class="who-toggle" id="whoTog">
+          ${QUIENES.map(w=>`<button data-w="${w}" class="${(t?t.quien:'David')===w?'sel':''}" onclick="selWho('${w}')">${w}</button>`).join('')}
+        </div>
+        <p class="help">En un ingreso, “quién” es quien cobró el dinero. Si fue por banco a nombre del grupo, pon <b>Altillo</b>.</p>
+      </div>
+      <div class="field hide" id="destField"><label>¿Dónde está ese dinero?</label>
+        <select id="fDestino">
+          <option value="caja" ${t&&t.destino==='caja'?'selected':''}>En la caja (efectivo, ya dentro del bote)</option>
+          <option value="banco" ${t&&t.destino==='banco'?'selected':''}>En el banco / bizum</option>
+          <option value="pendiente" ${t&&t.destino==='pendiente'?'selected':''}>Lo tiene esa persona encima (sin meter en caja)</option>
+        </select>
+        <p class="help" id="benefPreview"></p>
+      </div>
+      <div class="field hide" id="pagField"><label>¿De dónde salió el dinero?</label>
+        <select id="fPagado">
+          <option value="bolsillo" ${t&&t.pagado==='bolsillo'?'selected':''}>Del bolsillo de esa persona</option>
+          <option value="caja" ${t&&t.pagado==='caja'?'selected':''}>De la caja (sale del bote)</option>
+          <option value="banco" ${t&&t.pagado==='banco'?'selected':''}>Del banco de Altillo</option>
+        </select></div>
+      <div class="field hide" id="avisoField"><label>Estado del aviso</label>
+        <select id="fEstado">
+          <option value="Pendiente" ${t&&t.estado!=='Pagado'?'selected':''}>Pendiente (solo aviso, no cuenta como gasto)</option>
+          <option value="Pagado" ${t&&t.estado==='Pagado'?'selected':''}>Ya pagado (pasa a ser gasto)</option>
+        </select></div>
+    </div>
+    <div class="modal-f">
+      ${id?`<button class="btn danger" onclick="delTx('${id}');closeEntry()">Borrar</button>`:''}
+      <button class="btn" onclick="closeEntry()">Cancelar</button>
+      <button class="btn gold" onclick="saveEntry()">${id?'Guardar cambios':'Añadir movimiento'}</button>
+    </div></div>`;
+  bg.classList.add('show');
+  refreshFields();
+  setTimeout(()=>{const el=document.getElementById('fImporte');if(el)el.focus();},80);
+}
+function selType(tp){
+  window._tipoSel=tp;
+  document.querySelectorAll('#typeGrid .type-opt').forEach(o=>o.classList.toggle('sel',o.dataset.tp===tp));
+  document.getElementById('tipoHelp').textContent=TIPOS[tp]?TIPOS[tp].desc:'';
+  refreshFields();
+}
+function selWho(w){window._whoSel=w;document.querySelectorAll('#whoTog button').forEach(b=>b.classList.toggle('sel',b.dataset.w===w));}
+function selDir(d){
+  window._dirSel=d;
+  document.querySelectorAll('#dirTog button').forEach(b=>b.classList.toggle('sel',b.dataset.d===d));
+}
+function refreshFields(){
+  const tp=window._tipoSel;
+  document.getElementById('dirField').classList.toggle('hide',tp!=='Pá la Caja');
+  document.getElementById('destField').classList.toggle('hide',tp!=='Ingreso');
+  document.getElementById('pagField').classList.toggle('hide',!['Gasto Variable','Gasto Fijo','Caché'].includes(tp));
+  document.getElementById('avisoField').classList.toggle('hide',tp!=='Paguen Parseros');
+  previewBenef();
+}
+function previewBenef(){
+  const el=document.getElementById('benefPreview'); if(!el) return;
+  const v=parseFloat((document.getElementById('fImporte')||{}).value)||0;
+  if(window._tipoSel!=='Ingreso'||!v){el.textContent='';return;}
+  const b=round2(v*pctBenef()/100);
+  el.innerHTML=`De estos ${fmt(v)}, <b>${fmt(b)}</b> (${pctBenef()}%) van al bote de Altillo. Al guardar se creará la ficha para que no se te olvide meterlos en la caja.`;
+}
+function closeEntry(){document.getElementById('entryModal').classList.remove('show');editingId=null;}
+function saveEntry(){
+  const fecha=document.getElementById('fFecha').value||todayISO();
+  let importe=Math.abs(parseFloat(document.getElementById('fImporte').value));
+  const cat=document.getElementById('fCat').value.trim();
+  const tipo=window._tipoSel, quien=window._whoSel;
+  if(!importe||importe<=0){toast('Pon un importe válido','err');return;}
+  if(!cat){toast('Falta el concepto','err');return;}
+  if(tipo==='Pá la Caja'&&window._dirSel==='out') importe=-importe;
+  const destino = tipo==='Ingreso' ? document.getElementById('fDestino').value : '';
+  const pagado = ['Gasto Variable','Gasto Fijo','Caché'].includes(tipo) ? document.getElementById('fPagado').value : '';
+  const estado = tipo==='Paguen Parseros' ? document.getElementById('fEstado').value : '';
+  if(tipo==='Pá la Caja'&&window._dirSel==='out'){
+    const saldo=cajaBalance();
+    if(Math.abs(importe)>saldo+0.001 && !confirm(`Ojo: en la caja hay ${fmt(saldo)} y vas a sacar ${fmt(Math.abs(importe))}.\n\n¿Lo apunto igual?`)) return;
+  }
+  if(temporadaDe(fecha)!=='T2' && !confirm('Esa fecha es anterior al 18/09/2026, así que el movimiento se irá al archivo de la Temporada 1 y no lo verás. ¿Seguro?')) return;
+  if(editingId){
+    const t=state.transactions.find(x=>x.id===editingId);
+    Object.assign(t,{fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,estado,destino,pagado,actualizado:Date.now()});
+    toast('Movimiento actualizado ✓','ok');
+  }else{
+    const nuevo={fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,
+      id:Date.now()+''+Math.floor(Math.random()*999),estado,destino,pagado,origen:'',benef:'',actualizado:Date.now()};
+    state.transactions.push(nuevo);
+    if(tipo==='Ingreso') toast(`Ingreso guardado ✓ ficha de ${fmt(round2(importe*pctBenef()/100))} creada`,'ok');
+    else toast('Movimiento añadido ✓','ok');
+  }
+  resetRelleno();
+  save();closeEntry();renderAll();
+  autoPush();
+}
+function delTx(id){
+  if(!confirm('¿Borrar este movimiento?'))return;
+  state.transactions=state.transactions.filter(t=>t.id!==id);
+  state.meta.recentlyDeleted=(state.meta.recentlyDeleted||[]).concat(id).slice(-400);
+  save();renderAll();toast('Movimiento borrado','info');autoPush();
+}
+
+/* ============================================================= */
+/*  GRÁFICAS                                                     */
+/* ============================================================= */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function baseOpts(){
+  const grid=css('--line'),txt=css('--txt3');
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.parsed.y??c.parsed)}}},
+    scales:{x:{grid:{color:grid},ticks:{color:txt,font:{size:13}}},
+            y:{grid:{color:grid},ticks:{color:txt,font:{size:13},callback:v=>'€'+v}}}};
+}
+function drawCharts(){
+  if(typeof Chart==='undefined')return;
+  Chart.defaults.font.family='Barlow, sans-serif';
+  const serie=serieMensual();
+  const labels=serie.map(s=>s.label);
+  ['chEvo','chEvoIng'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const ds=[{label:'Ingresos',data:serie.map(s=>s.ingresos),borderColor:css('--green'),backgroundColor:css('--green')+'22',fill:true,tension:.35,pointRadius:3},
+              {label:'Gastos',data:serie.map(s=>s.gastos),borderColor:css('--red'),backgroundColor:css('--red')+'18',fill:true,tension:.35,pointRadius:3},
+              {label:'Beneficio',data:serie.map(s=>s.beneficio),borderColor:css('--purple'),backgroundColor:'transparent',borderDash:[5,4],tension:.35,pointRadius:2}];
+    const dsUse = id==='chEvoIng'? [ds[0]] : ds;
+    charts[id]=new Chart(el,{type:'line',data:{labels,datasets:dsUse},
+      options:{...baseOpts(),plugins:{...baseOpts().plugins,legend:{display:true,labels:{color:css('--txt2'),usePointStyle:true,boxWidth:8,font:{size:13}}}}}});
+  });
+  const txs=periodTx();
+  drawDonut('chIng','legIng',aggByCat(txs,['Ingreso']),[css('--green'),css('--cyan'),'#16a34a','#0891b2','#4ade80','#22d3ee','#15803d','#0e7490']);
+  const a=agg(txs);
+  drawDonut('chGas','legGas',[{nombre:'Variables',total:a.gvar},{nombre:'Fijos',total:a.gfijo},{nombre:'Cachés',total:a.cache}],[css('--red'),css('--amber'),css('--cyan')]);
+  const fe=document.getElementById('chFlow');
+  if(fe){
+    const caja=cajaBalance(), fondo=fondoBeneficio(), avis=agg(seasonTx()).avisoPend;
+    charts.chFlow=new Chart(fe,{type:'bar',data:{labels:['Ingresos','Gastos','Beneficio','Caja','Bote 10%','Avisos'],
+      datasets:[{data:[a.ingresos,-a.gastos,a.beneficio,caja,fondo,-avis],
+        backgroundColor:[css('--green'),css('--red'),a.beneficio>=0?css('--purple'):css('--red'),css('--blue'),css('--gold'),css('--amber')],borderRadius:7,barPercentage:.62}]},
+      options:{...baseOpts(),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.parsed.y)}}}}});
+  }
+  const pe=document.getElementById('chPer');
+  if(pe){
+    const d=personaStats('David',txs), ar=personaStats('Ariana',txs);
+    charts.chPer=new Chart(pe,{type:'bar',data:{labels:['Ingresos traídos','Cachés cobrados','Gastos a su nombre','Debe a Altillo'],
+      datasets:[{label:'David',data:[d.ingresos,d.cobrado,d.gastos,d.debe],backgroundColor:css('--cyan'),borderRadius:6},
+                {label:'Ariana',data:[ar.ingresos,ar.cobrado,ar.gastos,ar.debe],backgroundColor:css('--purple'),borderRadius:6}]},
+      options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:css('--txt2'),usePointStyle:true,boxWidth:8}},
+        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.parsed.y)}}}}});
+  }
+}
+function drawDonut(canvasId,legendId,items,palette){
+  const el=document.getElementById(canvasId);if(!el)return;
+  if(!items.length||items.every(i=>!i.total)){el.parentElement.innerHTML='<div class="empty" style="padding:30px">Sin datos</div>';return;}
+  const top=items.filter(i=>i.total).slice(0,7);
+  const total=top.reduce((s,i)=>s+i.total,0);
+  charts[canvasId]=new Chart(el,{type:'doughnut',data:{labels:top.map(i=>i.nombre),
+    datasets:[{data:top.map(i=>i.total),backgroundColor:palette,borderWidth:2,borderColor:css('--panel')}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.parsed)}}}}});
+  const leg=document.getElementById(legendId);
+  if(leg)leg.innerHTML=top.map((i,k)=>{const pc=total?Math.round(i.total/total*100):0;
+    return `<div class="li"><span class="sw" style="background:${palette[k%palette.length]}"></span><span class="nm">${esc(i.nombre)}</span><span class="vl">${fmt0(i.total)}</span><span class="pc" style="color:var(--txt3);margin-left:6px">${pc}%</span></div>`;}).join('');
+}
+</script>
+<script>
+/* ============================================================= */
+/*  DON CERDITO · asistente de la app (funciona sin internet)    */
+/* ============================================================= */
+let pigOpen=false, pigStarted=false;
+function pigToggle(force){
+  pigOpen = (force===undefined)? !pigOpen : force;
+  document.getElementById('pigPanel').classList.toggle('show',pigOpen);
+  document.getElementById('pigBubble').classList.add('hide');
+  if(pigOpen&&!pigStarted){pigStarted=true;pigHola();}
+  if(pigOpen) setTimeout(()=>document.getElementById('pigInput').focus(),120);
+}
+function pigSay(html,who='bot'){
+  const b=document.getElementById('pigBody');
+  const d=document.createElement('div');d.className='pmsg '+who;d.innerHTML=html;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function pigChips(list){
+  document.getElementById('pigChips').innerHTML=list.map(c=>`<button onclick="pigAsk('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+}
+const PIG_CHIPS=['¿Cuánto hay en caja?','¿Qué me falta por hacer?','Repartir un bolo de 600','¿Cómo apunto un bolo?','¿Qué es Paguen Parseros?','¿Quién debe qué?'];
+function pigHola(){
+  const caja=cajaBalance(), falta=beneficioPendiente(), avisos=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
+  pigSay(`¡Oink! Soy <b>Don Cerdito</b>, el contable de Altillo. Me sé esta app de memoria y tus números de la Temporada 2.<br><br>
+    🐷 En la caja hay <span class="num">${fmt(caja)}</span>.
+    ${falta>0?`<br>🏆 Faltan <span class="num">${fmt(falta)}</span> por apartar del ${pctBenef()}%.`:'<br>🏆 El beneficio está al día.'}
+    ${avisos.length?`<br>⚠️ Hay <b>${avisos.length}</b> aviso(s) de Paguen Parseros por <span class="num">${fmt(sumImp(avisos))}</span>.`:''}
+    <br><br>Pregúntame lo que quieras: cómo apuntar algo, cómo repartir un bolo o qué significa cada cosa.`);
+  pigChips(PIG_CHIPS);
+}
+function pigAsk(q){document.getElementById('pigInput').value=q;pigSend();}
+function pigSend(){
+  const inp=document.getElementById('pigInput');
+  const q=(inp.value||'').trim(); if(!q) return;
+  pigSay(esc(q),'me'); inp.value='';
+  setTimeout(()=>{pigSay(pigAnswer(q));pigChips(PIG_CHIPS);},220);
+}
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function numIn(s){
+  const m=norm(s).replace(/\./g,'').replace(/,/g,'.').match(/(\d+(?:\.\d+)?)/g);
+  if(!m) return null;
+  return parseFloat(m.sort((a,b)=>parseFloat(b)-parseFloat(a))[0]);
+}
+
+function pigReparto(total){
+  const b=round2(total*pctBenef()/100);
+  const resto=round2(total-b);
+  const mitad=round2(resto/2);
+  return `<b>Reparto de ${fmt(total)}</b><br>
+  1️⃣ Primero el beneficio de Altillo: <span class="num">${fmt(b)}</span> (${pctBenef()}%). Eso va al bote y no se toca.<br>
+  2️⃣ Queda <span class="num">${fmt(resto)}</span> para cachés y gastos del bolo.<br>
+  3️⃣ Si os repartís cachés a medias y no hay más gastos: <span class="num">${fmt(mitad)}</span> para David y <span class="num">${fmt(mitad)}</span> para Ariana.<br><br>
+  Cómo lo apuntas:<ul>
+    <li><b>Ingreso</b> de ${fmt(total)} con el concepto del bolo.</li>
+    <li>Ficha del ${pctBenef()}%: dale a <b>Ya lo he metido en la caja</b> cuando esos ${fmt(b)} estén dentro del bote.</li>
+    <li>Dos <b>Cachés</b> (uno de David y otro de Ariana) con lo que os hayáis pactado. El caché es un <b>gasto</b> de Altillo, no un ingreso.</li>
+  </ul>`;
+}
+
+const PIG_KB=[
+ {k:['cuanto','caja','hay','saldo','bote','dinero'],min:2,f:()=>{
+   const c=cajaBalance(), f=fondoBeneficio(), l=round2(c-f);
+   return `En la caja hay <span class="num">${fmt(c)}</span>.<br>De eso, <span class="num">${fmt(f)}</span> son del bote de beneficio (no se tocan) y <span class="num">${fmt(l)}</span> quedan libres.<br><br>Si al contarlo no cuadra, ve a <b>Pá la Caja ▸ Contar la caja (arqueo)</b> y escribe lo que hay de verdad.`;}},
+ {k:['arqueo','contar','cuadra','descuadr','perdido','trazabilidad','no se que hay'],min:1,f:()=>
+   `El <b>arqueo</b> es tu botón salvavidas. Cuentas el dinero físico del bote, vas a <b>Pá la Caja ▸ Contar la caja</b>, escribes lo que hay de verdad y la app apunta un ajuste con la diferencia.<br>No borra nada: deja rastro de que ese día se contó y desde ahí se sigue.`},
+ {k:['falta','pendiente','que hago','tareas','que me falta','deberes'],min:1,f:()=>{
+   const pend=apartadosPendientes(), avisos=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
+   const sinCaja=seasonTx().filter(t=>t.tipo==='Ingreso'&&t.destino==='pendiente');
+   let out=[];
+   if(pend.length) out.push(`🏆 <b>${pend.length}</b> ficha(s) del ${pctBenef()}% sin ingresar en caja: <span class="num">${fmt(beneficioPendiente())}</span>.`);
+   if(sinCaja.length) out.push(`✋ <b>${sinCaja.length}</b> ingreso(s) cobrados y sin meter en la caja: <span class="num">${fmt(sumImp(sinCaja))}</span>.`);
+   if(avisos.length) out.push(`⚠️ <b>${avisos.length}</b> aviso(s) de Paguen Parseros por <span class="num">${fmt(sumImp(avisos))}</span>.`);
+   if(remState().level==='late') out.push(`🔔 Llevas <b>${diasDesdeRelleno()}</b> días sin rellenar las cuentas.`);
+   return out.length? 'Esto es lo que tienes abierto:<br>'+out.join('<br>') : '¡Todo al día! No te falta nada por colocar. 🐷✨';}},
+ {k:['reparto','repartir','bolo de','dividir','como reparto'],min:1,f:(q)=>{
+   const n=numIn(q);
+   return n? pigReparto(n) : `Dime el importe y te lo reparto. Por ejemplo: <i>“repartir un bolo de 600”</i>.<br><br>La regla es siempre la misma: primero el <b>${pctBenef()}%</b> para el bote de Altillo, y de lo que queda salen los cachés que hayáis pactado.`;}},
+ {k:['cache','sueldo','cobrar','nos pagamos','pagarnos'],min:1,f:()=>
+   `Un <b>Caché</b> es el sueldo que Altillo os paga a David o a Ariana. Ojo con esto: <b>para Altillo es un GASTO</b>, no un ingreso.<br><br>
+    El orden correcto es: entra el dinero del bolo (Ingreso) → se aparta el ${pctBenef()}% al bote → y de lo que queda salís pagados con vuestros cachés.<br>
+    Apúntalo con tipo <b>Caché</b>, poniendo quién lo cobra y de dónde salió el dinero (de la caja, del banco o del bolsillo).`},
+ {k:['paguen','parseros','aviso','deuda','broker','futuro'],min:1,f:()=>{
+   const av=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
+   return `<b>Paguen Parseros</b> son avisos de gastos que sabéis que vendrán.<br>
+    Mientras están pendientes <b>no restan</b> de vuestros números: solo son un recordatorio que sale al abrir la app.<br>
+    Cuando le das a <b>Ya está pagado</b>, ese aviso se convierte en un gasto real con el concepto que pusiste.<br><br>
+    ${av.length?`Ahora mismo tienes <b>${av.length}</b> abierto(s) por <span class="num">${fmt(sumImp(av))}</span>.`:'Ahora mismo no tienes ninguno abierto.'}`;}},
+ {k:['beneficio','10','porcentaje','apartar','bote de altillo','ficha'],min:1,f:()=>{
+   const f=fondoBeneficio(), p=beneficioPendiente();
+   return `De <b>cada ingreso</b> se aparta el <b>${pctBenef()}%</b> para Altillo. Cada ingreso genera su <b>ficha</b> en la sección “Beneficio ${pctBenef()}%”, y esa ficha no desaparece hasta que ese dinero está dentro de la caja.<br><br>
+    Llevas <span class="num">${fmt(f)}</span> apartados y te faltan <span class="num">${fmt(p)}</span>.<br>
+    El porcentaje se cambia en <b>Datos & Backup ▸ Beneficio de Altillo</b>.`;}},
+ {k:['debe','deben','deuda','altillo','quien debe'],min:1,f:()=>{
+   const d=personaStats('David'), a=personaStats('Ariana');
+   return `<b>David</b> debe a Altillo <span class="num">${fmt(d.debe)}</span>${d.debe>0?` (${fmt(d.debeBolsillo)} sin meter en caja + ${fmt(d.debe10)} del ${pctBenef()}%)`:''}.<br>
+     <b>Ariana</b> debe a Altillo <span class="num">${fmt(a.debe)}</span>${a.debe>0?` (${fmt(a.debeBolsillo)} sin meter en caja + ${fmt(a.debe10)} del ${pctBenef()}%)`:''}.<br><br>
+     Lo tienes desglosado en la sección <b>David & Ariana</b>.`;}},
+ {k:['apuntar','apunto','registrar','anotar','meter','como se','bolo','ingreso'],min:2,f:()=>
+   `Para apuntar un <b>bolo</b>:<ul>
+     <li>Botón dorado <b>Añadir movimiento</b> ▸ tipo <b>Ingreso</b>.</li>
+     <li>Importe total que os han pagado y el concepto (ej. “Bolo Sala Villanos”).</li>
+     <li>Quién lo cobró y, muy importante, <b>dónde está ese dinero</b>: en la caja, en el banco o encima de esa persona.</li>
+    </ul>Al guardar se crea sola la ficha del ${pctBenef()}% para el bote. Los cachés se apuntan aparte, como tipo <b>Caché</b>.`},
+ {k:['sacar','saco','sacamos','quitar','retirar','gastar de la caja','salida'],min:1,f:()=>
+   `Para <b>sacar dinero de la caja</b>: <b>Pá la Caja ▸ Sacar dinero de la caja</b> (o Añadir movimiento ▸ <b>Pá la Caja</b> y elige “Sacar de la caja”). El importe se guarda en negativo y el saldo baja.<br>
+    Si el dinero sale de la caja para pagar un gasto concreto, mejor apunta el <b>gasto</b> y en “¿De dónde salió el dinero?” elige <b>De la caja</b>: así no lo cuentas dos veces.`},
+ {k:['temporada','historico','archivo','t1','t2','antiguo','2026'],min:1,f:()=>
+   `La <b>Temporada 2</b> empieza el <b>18/09/2026</b> y acaba el <b>18/09/2027</b>. Todo lo anterior está archivado: no suma ni resta, y no aparece en las vistas.<br>
+    Lo único que se arrastró de antes es el <b>dinero real que había en la caja</b>.<br>
+    Si algún día quieres mirar lo viejo: selector <b>Temporada</b> arriba ▸ “Temporada 1 · archivo”.`},
+ {k:['gasto','gastos','factura','compra','gasolina'],min:1,f:()=>
+   `Hay dos tipos de gasto: <b>Gasto Variable</b> (puntual: gasolina, publi, merchan, comida) y <b>Gasto Fijo</b> (se repite cada mes: el local de ensayo, cuotas).<br>
+    Al apuntarlo dime <b>de dónde salió el dinero</b>: del bolsillo de quien lo pagó, de la caja o del banco. Si eliges “de la caja”, el saldo del bote baja solo.`},
+ {k:['error','equivocado','borrar','deshacer','corregir','mal'],min:1,f:()=>
+   `Tranquilo, todo se arregla:<ul>
+     <li>Editar o borrar: lápiz 🗑 en <b>Movimientos</b>.</li>
+     <li>Ficha del ${pctBenef()}% cerrada por error: en <b>Beneficio</b>, “deshacer” en el historial.</li>
+     <li>Aviso marcado pagado sin querer: en <b>Paguen Parseros</b>, “deshacer”.</li>
+     <li>Caja descuadrada: <b>arqueo</b> y a seguir.</li>
+    </ul>`},
+ {k:['guarda','guardan','datos','drive','backup','perder','copia','sincroniza'],min:1,f:()=>
+   `Los datos se guardan en el navegador y, si tenéis la conexión con Drive puesta, se envían solos a la hoja <b>Datos_App</b> cada vez que tocas algo (y se traen los cambios del otro cada ~90 segundos).<br>
+    En <b>Datos & Backup</b> tienes además exportar a Excel o CSV cuando quieras.`},
+ {k:['quien','altillo','nombre','persona'],min:2,f:()=>
+   `En “Quién” hay tres opciones: <b>David</b>, <b>Ariana</b> y <b>Altillo</b>.<br>
+    Usa <b>Altillo</b> cuando el dinero no pasó por las manos de ninguno de los dos (por ejemplo una transferencia a la cuenta del grupo). Así no le genera deuda a nadie.`},
+ {k:['hola','buenas','oink','cerdito','quien eres','ayuda'],min:1,f:()=>
+   `¡Oink! Estoy para que no metáis la pata con las cuentas. Puedo decirte cuánto hay en caja, qué te falta por colocar, cómo repartir un bolo o cómo apuntar cualquier cosa. Prueba con los botones de abajo.`},
+ {k:['gracias','crack','genial','bien'],min:1,f:()=>`A mandar. Si apuntáis todo el mismo día, esto no falla nunca. 🐷`}
+];
+function pigAnswer(q){
+  const n=norm(q);
+  let best=null,bestScore=0;
+  PIG_KB.forEach(it=>{
+    let sc=0; it.k.forEach(w=>{if(n.includes(norm(w)))sc++;});
+    if(sc>=(it.min||1)&&sc>bestScore){best=it;bestScore=sc;}
+  });
+  if(best) return best.f(q);
+  const num=numIn(q);
+  if(num&&(n.includes('bolo')||n.includes('cobr')||n.includes('euro')||n.includes('€'))) return pigReparto(num);
+  return `No te he pillado del todo. Puedo ayudarte con:<ul>
+    <li>Cuánto hay en la caja y cuánto es beneficio</li>
+    <li>Qué te falta por apartar o por colocar</li>
+    <li>Cómo repartir un bolo (dime el importe)</li>
+    <li>Cómo apuntar ingresos, gastos, cachés o avisos</li>
+    <li>El arqueo de caja y las temporadas</li></ul>`;
+}
+function pigAlerta(){
+  const pend=apartadosPendientes().length+seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado').length;
+  const b=document.getElementById('pigBubble');
+  b.classList.toggle('hide',!pend);
+  b.textContent=pend||'';
+}
+
+/* ============================================================= */
+/*  INIT                                                         */
+/* ============================================================= */
+function init(){
+  load();
+  document.documentElement.setAttribute('data-theme',state.ui.theme||'dark');
+  document.getElementById('thDark').classList.toggle('on',(state.ui.theme||'dark')==='dark');
+  document.getElementById('thLight').classList.toggle('on',state.ui.theme==='light');
+  buildNav();
+  go(state.ui.view||'resumen');
+  startReminderWatch();
+  setTimeout(()=>{avisoInicio();pigAlerta();},400);
+  if(state.meta.sync.url){
+    syncPull(true).then(()=>{pigAlerta();});
+    setInterval(()=>{ if(state.meta.sync.url) syncPull(true).then(()=>pigAlerta()); }, 90*1000);
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && state.meta.sync.url) syncPull(true); });
+  }
+}
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('modal-bg')) e.target.classList.remove('show');
+});
+init();
+</script>
+</body>
+</html>
