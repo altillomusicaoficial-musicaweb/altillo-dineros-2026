@@ -1,54 +1,89 @@
-# ALTILLO · Dineros 2026
+# ALTILLO · Dineros — Temporada 2
 
-App de control de cuentas del proyecto, construida sobre tu Excel `DINEROS_2026`
-(pestaña `Datos_App`). Un solo fichero, sin instalación.
+App de control de cuentas del proyecto. Un solo fichero (`index.html`), sin instalación.
+Online en GitHub Pages; los datos se guardan en el navegador y se sincronizan con la hoja
+`Datos_App` de Drive.
 
-**Única fuente de datos: la pestaña `Datos_App`.** Es una tabla plana (Fecha, Mes,
-Tipo, Categoría, Quién, Importe, ID, Estado, Actualizado) sin límite de filas — el
-script la borra y reescribe entera cada vez, así que da igual si un mes tiene 5
-movimientos o 500. La pestaña `CUENTAS 2026` (el diseño manual con celdas combinadas
-y huecos fijos por mes) queda **descontinuada**: no la toca el script ni la app, y
-tiene un número de filas fijo por bloque que se puede quedar corto. Anota todo desde
-la app (Resumen ▸ Reportes ya calcula lo mismo, sin límite) y no sigas rellenando esa
-hoja a mano.
+## Temporada 2 (desde el 18/09/2026)
 
-## Cómo abrirla
-- **Doble clic** en `index.html` → se abre en tu navegador. Ya trae tus 40 movimientos cargados.
-- O súbela a **GitHub Pages** (como el Live Manager) y la tenéis online en el móvil.
+- La temporada va del **18/09/2026 al 18/09/2027**.
+- Todo lo anterior queda **archivado**: no suma, no resta y no sale en ninguna vista.
+  Se puede consultar en el selector *Temporada ▸ Temporada 1 · archivo*.
+- Lo único que se arrastró de antes es el **dinero real que había en la caja**, que aparece
+  como un movimiento llamado *“Saldo inicial de caja (viene de Temporada 1)”*. Si no cuadra
+  con lo que hay en el bote, se corrige con un **arqueo** (ver abajo).
 
-Los datos se guardan solos en el navegador (localStorage). No se pierde nada al cerrar.
+## Cómo funciona el dinero
 
-## Qué hace
-- **Resumen**: KPIs (ingresos, gastos, beneficio, efectivo en caja, pendiente brokers), evolución mensual, distribución de ingresos y gastos, flujo de caja, metas.
-- **Ingresos / Gastos / Efectivo**: vistas filtradas con su detalle.
-- **Brokers / Deudas**: lo que hay que devolver a quien os consigue bolos. Marcas "pagado" cuando devuelves. *No se os olvida.*
-- **Movimientos**: tabla con búsqueda; añadir / editar / borrar.
-- **Reportes**: resumen mensual + balance por persona (David / Ariana).
-- **Metas**: objetivos editables con barras de progreso.
+**Un caché NO es un ingreso.** Es el sueldo que Altillo os paga a David o a Ariana, así que
+para el proyecto es un **gasto**. El orden es siempre:
 
-## Recordatorio quincenal (firme)
-- Al abrir, si han pasado **14 días o más** desde el último relleno, salta un aviso con **alarma sonora** que **reaparece** hasta que confirmes.
-- Chip de estado siempre visible en la cabecera (verde / ámbar / rojo).
-- Cada movimiento que añades **reinicia el contador**. También puedes pulsar "Confirmar relleno".
-- Opcional: notificaciones del navegador (Datos & Backup ▸ Activar).
+1. Entra el dinero del bolo → tipo **Ingreso**.
+2. Se aparta el **10%** para el bote de beneficio de Altillo.
+3. De lo que queda salen los **cachés** pactados y los gastos.
 
-## Backup en Drive (automático, casi en tiempo real)
-1. Abre `apps-script-sync.gs` y sigue los 6 pasos del principio del archivo.
-2. En la app ▸ **Datos & Backup** ▸ pega la URL del Web App y el token ▸ **Guardar conexión**.
-3. **Traer de Drive** / **Enviar a Drive**. Además, cada vez que añades, editas o borras algo, se envía solo.
-4. La app también trae sola lo nuevo de Drive: al abrir, cada ~90 segundos y al volver a la pestaña.
-   Así si David añade un movimiento, a Ariana le aparece solo sin que nadie tenga que darle a "Traer".
-5. El script guarda una copia de seguridad automática (las 5 últimas) en la propia Hoja.
-
-**Importante:** si ya tenías el script de Apps Script desplegado antes de este cambio, vuelve a pegar
-el `apps-script-sync.gs` actualizado (añade la columna "Actualizado") y crea una **nueva versión**
-del despliegue (Implementar ▸ Gestionar implementaciones ▸ Editar ▸ Nueva versión). Sin eso, los
-movimientos nuevos igual se sincronizan bien, pero editar un movimiento que ya existe en los dos
-sitios a la vez podría no fusionarse correctamente.
-
-### Si prefieres el modo manual
-En la misma pestaña: **Exportar Excel** (misma estructura `Datos_App` que tu original) o **Importar Excel** para reemplazar/combinar. Perfecto para llevar el maestro en Drive a mano.
+Ejemplo con 600 € de un bolo: 60 € al bote de beneficio, y de los 540 € restantes salen
+(por ejemplo) 100 € de caché para David y 100 € para Ariana.
 
 ## Tipos de movimiento
-Ingreso · Caché · Gasto Variable · Gasto Fijo · Efectivo (bote) · Deuda Broker.
-Ingresos y Cachés suman a ingresos; los dos gastos restan; Efectivo alimenta la caja; Deuda Broker es lo pendiente de devolver.
+
+| Tipo | Qué es | Cómo afecta |
+|---|---|---|
+| **Ingreso** | Dinero que entra a Altillo | Suma a ingresos y genera la ficha del 10% |
+| **Caché** | Sueldo que Altillo paga a David o Ariana | Gasto de Altillo |
+| **Gasto Variable** | Gasto puntual (gasolina, publi, merchan…) | Gasto |
+| **Gasto Fijo** | Gasto que se repite (local de ensayo, cuotas…) | Gasto |
+| **Pá la Caja** | Meter o **sacar** dinero físico del bote | Sube o baja la caja |
+| **Paguen Parseros** | Aviso de un gasto que vendrá | **No cuenta** hasta marcarlo pagado |
+
+En cada ingreso se indica **dónde está ese dinero** (en la caja, en el banco o encima de una
+persona) y en cada gasto **de dónde salió** (bolsillo, caja o banco). De ahí salen solos el
+saldo de la caja y lo que cada uno debe a Altillo.
+
+## Beneficio 10%
+
+Cada ingreso crea una **ficha** en la sección *Beneficio 10%*. Esa ficha **no desaparece**
+hasta que ese dinero está dentro de la caja: o bien se pulsa *“Ya lo he metido en la caja”*
+(crea el movimiento en el bote) o *“Ya estaba dentro”* si el ingreso entró entero en efectivo.
+El porcentaje se cambia en *Datos & Backup ▸ Beneficio de Altillo*.
+
+## Paguen Parseros
+
+Avisos de gastos futuros. Aparecen **al abrir la app** y en el aviso del Resumen. Mientras
+están pendientes no restan nada. Al pulsar *“Ya está pagado”* se convierten en gasto real con
+el mismo concepto, y se pregunta si salió de la caja.
+
+## Arqueo de caja
+
+*Pá la Caja ▸ Contar la caja (arqueo)*. Se cuenta el dinero físico, se escribe lo que hay de
+verdad y la app apunta un movimiento de ajuste con la diferencia. No borra nada: deja rastro
+del día que se contó y se sigue desde ahí.
+
+## David & Ariana
+
+Sección propia con, para cada uno: ingresos que ha traído, cachés cobrados, gastos a su
+nombre, dinero metido en la caja y **lo que debe a Altillo** = dinero de bolos que todavía
+tiene encima + el 10% de sus ingresos que aún no ha entrado en la caja.
+
+## Don Cerdito
+
+El cerdito con sombrero de abajo a la derecha. Funciona sin internet y conoce los números
+reales de la app: cuánto hay en caja, qué falta por apartar, cómo repartir un bolo (“repartir
+un bolo de 600”), cómo apuntar cada cosa y qué significa cada sección.
+
+## Recordatorio quincenal
+
+Si pasan **14 días** sin rellenar, salta un aviso con alarma que reaparece hasta confirmarlo.
+Cada movimiento reinicia el contador.
+
+## Backup en Drive
+
+1. Pega `apps-script-sync.gs` en script.google.com y sigue los pasos del principio del archivo.
+2. App ▸ *Datos & Backup* ▸ URL del Web App + token ▸ *Guardar conexión*.
+
+**Importante:** la Temporada 2 añade las columnas `Destino`, `Pagado`, `Origen` y `Benef` a la
+hoja `Datos_App`. Hay que volver a pegar el `apps-script-sync.gs` actualizado y crear una
+**nueva versión** del despliegue (Implementar ▸ Gestionar implementaciones ▸ Editar ▸ Nueva
+versión). Sin eso se pierden los campos nuevos al sincronizar.
+
+También hay *Exportar Excel/CSV* e *Importar* para el modo manual.

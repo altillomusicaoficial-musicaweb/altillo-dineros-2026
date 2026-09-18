@@ -24,7 +24,13 @@
 const SPREADSHEET_ID = '1flGqOSAv4WOxKzAqlEVYIefIoScKN44zi3r3rFlcX7c'; // DINEROS 2026
 const SHEET         = 'Datos_App';
 const TOKEN         = 'altillo-2026';            // debe coincidir con el de la app
-const HEAD = ['Fecha','Mes','Tipo','Categoría','Quién','Importe','ID','Estado','Actualizado'];
+const HEAD = ['Fecha','Mes','Tipo','Categoría','Quién','Importe','ID','Estado',
+              'Destino','Pagado','Origen','Benef','Actualizado'];
+/*  Columnas nuevas de la Temporada 2:
+    Destino → dónde está el dinero de un Ingreso: caja | banco | pendiente
+    Pagado  → de dónde salió el dinero de un gasto/caché: caja | banco | bolsillo
+    Origen  → id del ingreso del que viene un apartado del 10%
+    Benef   → "ya" si el 10% de ese ingreso ya estaba dentro de la caja          */
 
 /* ---- lectura (la app hace "Traer de Drive") ---- */
 function doGet(e){
@@ -75,6 +81,10 @@ function readAll(){
       importe: Number(r[at('Importe')]) || 0,
       id: String(r[at('ID')] || ''),
       estado: at('Estado') >= 0 ? r[at('Estado')] : '',
+      destino: at('Destino') >= 0 ? String(r[at('Destino')] || '') : '',
+      pagado: at('Pagado') >= 0 ? String(r[at('Pagado')] || '') : '',
+      origen: at('Origen') >= 0 ? String(r[at('Origen')] || '') : '',
+      benef: at('Benef') >= 0 ? String(r[at('Benef')] || '') : '',
       actualizado: at('Actualizado') >= 0 ? (Number(r[at('Actualizado')]) || 0) : 0
     });
   }
@@ -93,7 +103,8 @@ function writeAll(txs){
   }catch(err){}
   sh.clear();
   const data = [HEAD].concat(txs.map(t => [
-    t.fecha, t.mes, t.tipo, t.categoria, t.quien, Number(t.importe)||0, String(t.id||''), t.estado||'', Number(t.actualizado)||0
+    t.fecha, t.mes, t.tipo, t.categoria, t.quien, Number(t.importe)||0, String(t.id||''), t.estado||'',
+    t.destino||'', t.pagado||'', String(t.origen||''), t.benef||'', Number(t.actualizado)||0
   ]));
   sh.getRange(1,1,data.length,HEAD.length).setValues(data);
   return txs.length;
