@@ -747,6 +747,11 @@ function efectoCaja(t){
 /* ---------- BENEFICIO 10% ---------- */
 function apartadoDe(t){return round2((+t.importe||0)*pctBenef()/100);}
 function apartadoResuelto(t){
+  /* Automático: si el dinero del ingreso ya está en la caja o en el banco, el 10%
+     se da por apartado solo, sin tocar ningún botón. Solo queda pendiente cuando
+     el dinero sigue en el bolsillo de alguien (destino "pendiente"), porque ahí
+     todavía no hay nada que colocar de verdad. */
+  if(t.destino!=='pendiente') return true;
   if(t.benef==='ya') return true;
   return state.transactions.some(x=>x.origen===t.id);
 }
@@ -933,7 +938,7 @@ const TITLES={
   ingresos:['Ingresos','Todo el dinero que entra a Altillo'],
   gastos:['Gastos y cachés','Lo que sale: gastos del proyecto y sueldos'],
   caja:['Pá la Caja','El bote físico: lo que entra, lo que sale y lo que hay'],
-  beneficio:['Beneficio '+'','El % de cada ingreso que se aparta para Altillo'],
+  beneficio:['Beneficio '+'','Se aparta solo en cuanto registras el ingreso'],
   parseros:['Paguen Parseros','Avisos de gastos que vendrán'],
   movimientos:['Movimientos','Todas las anotaciones'],
   personas:['David & Ariana','Qué aporta y qué debe cada uno'],
@@ -1029,7 +1034,7 @@ function viewResumen(){
   const avisoTot=sumImp(avisos);
   const alerts=[
     pendList.length?`<div class="alertbar benef"><span class="ab-ic">🐷</span><div class="ab-txt">
-      Hay <b>${pendList.length}</b> ingreso${pendList.length>1?'s':''} sin apartar su ${pctBenef()}% · faltan <b>${fmt(pend)}</b> por meter en la caja</div>
+      Hay <b>${pendList.length}</b> ingreso${pendList.length>1?'s':''} con el dinero sin colocar (incluye su ${pctBenef()}%) · <b>${fmt(pend)}</b> siguen en el bolsillo de alguien</div>
       <button class="btn gold" onclick="go('beneficio')">Ver fichas</button></div>`:'',
     avisos.length?`<div class="alertbar aviso"><span class="ab-ic">⚠️</span><div class="ab-txt">
       <b>${avisos.length}</b> aviso${avisos.length>1?'s':''} de Paguen Parseros pendiente${avisos.length>1?'s':''} · <b>${fmt(avisoTot)}</b> que vendrán</div>
@@ -1107,7 +1112,7 @@ function viewResumen(){
     </div>
   </div>
 
-  <div class="tip"><span class="ti">🐷</span><div><b>Don Cerdito:</b> apunta cada bolo el mismo día. De cada ingreso se aparta el <b>${pctBenef()}%</b> para el bote de Altillo y solo después se reparten los cachés. Si dudas, pregúntame abajo a la derecha.</div></div>`;
+  <div class="tip"><span class="ti">🐷</span><div><b>Don Cerdito:</b> apunta cada bolo el mismo día y di dónde está el dinero (caja, banco o en un bolsillo). Si ya está colocado, el <b>${pctBenef()}%</b> se aparta solo, sin tocar nada, y solo después se reparten los cachés. Si dudas, pregúntame abajo a la derecha.</div></div>`;
 }
 function metasHtml(){
   const all=agg(seasonTx());
@@ -1276,39 +1281,42 @@ function arqueoOk(actual){
 function viewBeneficio(){
   const txs=seasonTx();
   const pend=apartadosPendientes(txs), hechos=apartadosHechos(txs);
+  const hechosAuto=hechos.filter(t=>t.destino!=='pendiente');
+  const hechosManual=hechos.filter(t=>t.destino==='pendiente');
   const fondo=fondoBeneficio(txs), falta=beneficioPendiente(txs);
   const tickets = pend.length? `<div class="tickets">`+pend.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(t=>`
       <div class="ticket benef">
         <div class="tk-top"><span class="tk-cat" title="${esc(t.categoria)}">${esc(t.categoria)}</span><span class="tk-date">${fdate(t.fecha)}</span></div>
         <div class="tk-big" style="color:var(--purple)">${fmt(apartadoDe(t))}</div>
-        <div class="tk-sub">${pctBenef()}% de ${fmt(t.importe)} · cobró ${esc(t.quien)}${t.destino==='caja'?' · entró en la caja':''}</div>
+        <div class="tk-sub">${pctBenef()}% de ${fmt(t.importe)} · cobró ${esc(t.quien)} · sigue en su bolsillo</div>
         <div class="tk-acts">
-          ${t.destino==='caja'
-            ? `<button class="btn gold" onclick="resolverApartado('${t.id}','ya')">✓ Ya está dentro de la caja</button>
-               <button class="tk-link" onclick="resolverApartado('${t.id}','mover')">Lo meto aparte</button>`
-            : `<button class="btn gold" onclick="resolverApartado('${t.id}','mover')">🐷 Ya lo he metido en la caja</button>
-               <button class="tk-link" onclick="resolverApartado('${t.id}','ya')">Ya estaba dentro</button>`}
+          <button class="btn gold" onclick="resolverApartado('${t.id}','mover')">🐷 Ya he metido ese ${pctBenef()}% en la caja</button>
+          <button class="tk-link" onclick="resolverApartado('${t.id}','ya')">Ya estaba todo dentro</button>
         </div>
       </div>`).join('')+`</div>`
-    : `<div class="empty">🏆 No queda ningún ingreso sin apartar su ${pctBenef()}%. Bien hecho.</div>`;
-  const hist = hechos.length? `<table><thead><tr><th>Fecha</th><th>Ingreso</th><th>Quién</th><th class="rt">Ingreso</th><th class="rt">Apartado ${pctBenef()}%</th><th></th></tr></thead><tbody>`+
-    hechos.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(t=>`<tr><td class="tblq">${fdate(t.fecha)}</td><td>${esc(t.categoria)}</td><td>${esc(t.quien)}</td>
+    : `<div class="empty">🏆 No queda ningún ${pctBenef()}% sin colocar. Bien hecho.</div>`;
+  const hist = hechosManual.length? `<table><thead><tr><th>Fecha</th><th>Ingreso</th><th>Quién</th><th class="rt">Ingreso</th><th class="rt">Apartado ${pctBenef()}%</th><th></th></tr></thead><tbody>`+
+    hechosManual.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(t=>`<tr><td class="tblq">${fdate(t.fecha)}</td><td>${esc(t.categoria)}</td><td>${esc(t.quien)}</td>
       <td class="rt mono">${fmt(t.importe)}</td><td class="rt mono" style="color:var(--gold)">${fmt(apartadoDe(t))}</td>
       <td class="rt"><button class="tk-link" onclick="reabrirApartado('${t.id}')">deshacer</button></td></tr>`).join('')+
-    `</tbody></table>`:`<div class="empty">Todavía no has apartado ningún beneficio.</div>`;
+    `</tbody></table>`:`<div class="empty">Ningún apartado resuelto a mano todavía: los demás se cuentan solos.</div>`;
   return `
   <div class="grid kpis" style="grid-template-columns:repeat(3,1fr)">
     ${kpiCard('Bote de beneficio',fondo,'var(--gold)','🏆',`${hechos.length} ingresos ya apartados`)}
-    ${kpiCard('Falta por apartar',falta,falta>0?'var(--red)':'var(--txt3)','⏳',`${pend.length} fichas abiertas`)}
+    ${kpiCard('Sin colocar',falta,falta>0?'var(--red)':'var(--txt3)','⏳',`${pend.length} en el bolsillo de alguien`)}
     ${kpiCard('Total generado',round2(fondo+falta),'var(--purple)','📈',`${pctBenef()}% de todos los ingresos`)}
   </div>
+  <div class="tip" style="margin:0 0 16px"><span class="ti">🐷</span><div>El <b>${pctBenef()}%</b> se aparta <b>solo</b> en cuanto registras un ingreso que ya está en la caja o en el banco — no hace falta confirmar nada. Solo queda como ficha abierta cuando el dinero sigue en el bolsillo de alguien: ahí sí hay algo real que colocar.</div></div>
   <div class="card" style="margin-bottom:16px">
-    <div class="h-row"><h3>Fichas pendientes de ingresar en caja</h3>
-      <span class="tot">Falta<b style="color:var(--red)">${fmt0(falta)}</b></span></div>
-    <p class="help" style="margin:0 0 14px">Cada ingreso genera su ficha con el <b>${pctBenef()}%</b>. La ficha <b>no desaparece</b> hasta que ese dinero está dentro de la caja.</p>
+    <div class="h-row"><h3>Dinero sin colocar (incluye tu ${pctBenef()}%)</h3>
+      <span class="tot">Sin colocar<b style="color:var(--red)">${fmt0(falta)}</b></span></div>
     ${tickets}
   </div>
-  <div class="card"><div class="h-row"><h3>Historial de apartados</h3><span class="tot">Total<b style="color:var(--gold)">${fmt0(fondo)}</b></span></div>${hist}</div>`;
+  <div class="card" style="margin-bottom:16px">
+    <div class="h-row"><h3>Apartados automáticos</h3><span class="tot">Total<b style="color:var(--gold)">${fmt0(sumImp(hechosAuto.map(t=>({importe:apartadoDe(t)}))))}</b></span></div>
+    <p class="help" style="margin:0">${hechosAuto.length? `${hechosAuto.length} ingreso${hechosAuto.length>1?'s':''} ya contados solos, sin tocar ningún botón.` : 'Aquí aparecerán los ingresos que registres directamente en caja o en el banco.'}</p>
+  </div>
+  <div class="card"><div class="h-row"><h3>Resueltos a mano</h3><span class="tot">Total<b style="color:var(--gold)">${fmt0(sumImp(hechosManual.map(t=>({importe:apartadoDe(t)}))))}</b></span></div>${hist}</div>`;
 }
 function resolverApartado(id,modo){
   const t=state.transactions.find(x=>x.id===id); if(!t) return;
@@ -1328,6 +1336,7 @@ function resolverApartado(id,modo){
 }
 function reabrirApartado(id){
   const t=state.transactions.find(x=>x.id===id); if(!t) return;
+  if(t.destino!=='pendiente'){toast('Este apartado es automático: cambia el destino del ingreso si hace falta corregirlo','info');return;}
   if(!confirm('¿Reabrir esta ficha? Se quitará el apartado del bote de beneficio.'))return;
   t.benef=''; t.actualizado=Date.now();
   const mov=state.transactions.filter(x=>x.origen===id);
@@ -1394,8 +1403,8 @@ function avisoInicio(){
         ${pend.map(t=>`<div class="resline"><span class="rn">${esc(t.categoria)} <span class="muted">· ${esc(t.quien)} · ${fdate(t.fecha)}</span></span>
           <span class="rv" style="color:var(--amber)">${fmt(t.importe)}</span></div>`).join('')}
         <div class="tot-line"><span class="tl">Total por venir</span><span class="tv" style="color:var(--amber)">${fmt(sumImp(pend))}</span></div>`:''}
-      ${benefPend.length?`<h3 style="font-family:'Barlow Condensed';font-size:18px;letter-spacing:1px;margin:18px 0 8px;color:var(--purple)">🏆 BENEFICIO · ${benefPend.length} ficha${benefPend.length>1?'s':''} sin ingresar</h3>
-        <p class="help" style="margin:0 0 10px">Falta meter en la caja <b>${fmt(beneficioPendiente())}</b> del ${pctBenef()}% de los ingresos.</p>`:''}
+      ${benefPend.length?`<h3 style="font-family:'Barlow Condensed';font-size:18px;letter-spacing:1px;margin:18px 0 8px;color:var(--purple)">🏆 BENEFICIO · ${benefPend.length} ficha${benefPend.length>1?'s':''} sin colocar</h3>
+        <p class="help" style="margin:0 0 10px">Hay <b>${fmt(beneficioPendiente())}</b> del ${pctBenef()}% que siguen en el bolsillo de alguien. El resto ya se ha apartado solo.</p>`:''}
     </div>
     <div class="modal-f">
       ${benefPend.length?`<button class="btn" onclick="cerrarAviso();go('beneficio')">Ver fichas del ${pctBenef()}%</button>`:''}
@@ -1436,12 +1445,11 @@ function txTable(txs,full){
     else if(t.tipo==='Paguen Parseros'){signo=t.estado==='Pagado'?'−':'⏳';cls=t.estado==='Pagado'?'neg':'muted';}
     else {signo='−';cls='neg';}
     const tags=[
-      t.destino==='caja'?'<span class="badge ok">a caja</span>':'',
-      t.destino==='pendiente'?'<span class="badge pend">sin meter en caja</span>':'',
-      t.destino==='banco'?'<span class="badge ok" style="background:rgba(59,130,246,.15);color:#7aa8ff">banco</span>':'',
+      t.destino==='caja'?`<span class="badge ok">a caja · ${pctBenef()}% apartado</span>`:'',
+      t.destino==='pendiente'?`<span class="badge pend">sin colocar · incluye su ${pctBenef()}%</span>`:'',
+      t.destino==='banco'?`<span class="badge ok" style="background:rgba(59,130,246,.15);color:#7aa8ff">banco · ${pctBenef()}% apartado</span>`:'',
       t.pagado==='caja'?'<span class="badge pend" style="background:rgba(59,130,246,.15);color:#7aa8ff">pagado de la caja</span>':'',
-      (t.tipo==='Paguen Parseros'&&t.estado==='Pagado')?'<span class="badge ok">pagado</span>':'',
-      (t.tipo==='Ingreso'&&!apartadoResuelto(t))?`<span class="badge pend">falta ${pctBenef()}%</span>`:''
+      (t.tipo==='Paguen Parseros'&&t.estado==='Pagado')?'<span class="badge ok">pagado</span>':''
     ].join(' ');
     return `<tr data-s="${esc((t.categoria+' '+t.tipo+' '+t.quien).toLowerCase())}" data-tipo="${esc(t.tipo)}" data-quien="${esc(t.quien)}">
       <td class="tblq">${fdate(t.fecha)}</td>
@@ -1578,7 +1586,7 @@ function viewDatos(){
 
     <div class="card">
       <div class="h-row"><h3>Beneficio de Altillo</h3></div>
-      <p class="help">De cada ingreso se aparta este porcentaje al bote de Altillo. Se hace <b>antes</b> de repartir cachés.</p>
+      <p class="help">De cada ingreso se aparta este porcentaje al bote de Altillo, <b>automáticamente</b> en cuanto lo registras (si el dinero ya está en la caja o el banco). Se hace <b>antes</b> de repartir cachés. Solo queda como ficha pendiente si el dinero sigue en un bolsillo.</p>
       <div class="field" style="max-width:220px;margin-top:12px"><label>Porcentaje (%)</label>
         <input type="number" min="0" max="100" step="1" value="${pctBenef()}" onchange="state.meta.pctBeneficio=+this.value||0;save();renderAll();toast('Porcentaje actualizado','ok')"></div>
     </div>
@@ -1850,7 +1858,10 @@ function previewBenef(){
   const v=parseFloat((document.getElementById('fImporte')||{}).value)||0;
   if(window._tipoSel!=='Ingreso'||!v){el.textContent='';return;}
   const b=round2(v*pctBenef()/100);
-  el.innerHTML=`De estos ${fmt(v)}, <b>${fmt(b)}</b> (${pctBenef()}%) van al bote de Altillo. Al guardar se creará la ficha para que no se te olvide meterlos en la caja.`;
+  const dest=(document.getElementById('fDestino')||{}).value||'caja';
+  el.innerHTML = dest==='pendiente'
+    ? `De estos ${fmt(v)}, <b>${fmt(b)}</b> (${pctBenef()}%) son para el bote de Altillo. Como el dinero sigue en un bolsillo, se creará una ficha para no perder la cuenta hasta que se coloque.`
+    : `De estos ${fmt(v)}, <b>${fmt(b)}</b> (${pctBenef()}%) van al bote de Altillo <b>automáticamente</b> al guardar, sin nada más que hacer.`;
 }
 function closeEntry(){document.getElementById('entryModal').classList.remove('show');editingId=null;}
 function saveEntry(){
@@ -1877,7 +1888,12 @@ function saveEntry(){
     const nuevo={fecha,mes:mesFromDate(fecha),tipo,categoria:cat,quien,importe,
       id:Date.now()+''+Math.floor(Math.random()*999),estado,destino,pagado,origen:'',benef:'',actualizado:Date.now()};
     state.transactions.push(nuevo);
-    if(tipo==='Ingreso') toast(`Ingreso guardado ✓ ficha de ${fmt(round2(importe*pctBenef()/100))} creada`,'ok');
+    if(tipo==='Ingreso'){
+      const b=round2(importe*pctBenef()/100);
+      toast(destino==='pendiente'
+        ? `Ingreso guardado ✓ ficha de ${fmt(b)} pendiente de colocar`
+        : `Ingreso guardado ✓ ${fmt(b)} apartados solos al bote`,'ok');
+    }
     else toast('Movimiento añadido ✓','ok');
   }
   resetRelleno();
@@ -1977,7 +1993,7 @@ function pigHola(){
   const caja=cajaBalance(), falta=beneficioPendiente(), avisos=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
   pigSay(`¡Oink! Soy <b>Don Cerdito</b>, el contable de Altillo. Me sé esta app de memoria y tus números de la Temporada 2.<br><br>
     🐷 En la caja hay <span class="num">${fmt(caja)}</span>.
-    ${falta>0?`<br>🏆 Faltan <span class="num">${fmt(falta)}</span> por apartar del ${pctBenef()}%.`:'<br>🏆 El beneficio está al día.'}
+    ${falta>0?`<br>🏆 Hay <span class="num">${fmt(falta)}</span> del ${pctBenef()}% sin colocar (dinero que sigue en un bolsillo).`:'<br>🏆 El beneficio está al día.'}
     ${avisos.length?`<br>⚠️ Hay <b>${avisos.length}</b> aviso(s) de Paguen Parseros por <span class="num">${fmt(sumImp(avisos))}</span>.`:''}
     <br><br>Pregúntame lo que quieras: cómo apuntar algo, cómo repartir un bolo o qué significa cada cosa.`);
   pigChips(PIG_CHIPS);
@@ -2021,7 +2037,7 @@ const PIG_KB=[
    const pend=apartadosPendientes(), avisos=seasonTx().filter(t=>t.tipo==='Paguen Parseros'&&t.estado!=='Pagado');
    const sinCaja=seasonTx().filter(t=>t.tipo==='Ingreso'&&t.destino==='pendiente');
    let out=[];
-   if(pend.length) out.push(`🏆 <b>${pend.length}</b> ficha(s) del ${pctBenef()}% sin ingresar en caja: <span class="num">${fmt(beneficioPendiente())}</span>.`);
+   if(pend.length) out.push(`🏆 <b>${pend.length}</b> ficha(s) del ${pctBenef()}% sin colocar (dinero en un bolsillo): <span class="num">${fmt(beneficioPendiente())}</span>.`);
    if(sinCaja.length) out.push(`✋ <b>${sinCaja.length}</b> ingreso(s) cobrados y sin meter en la caja: <span class="num">${fmt(sumImp(sinCaja))}</span>.`);
    if(avisos.length) out.push(`⚠️ <b>${avisos.length}</b> aviso(s) de Paguen Parseros por <span class="num">${fmt(sumImp(avisos))}</span>.`);
    if(remState().level==='late') out.push(`🔔 Llevas <b>${diasDesdeRelleno()}</b> días sin rellenar las cuentas.`);
@@ -2041,20 +2057,22 @@ const PIG_KB=[
     ${av.length?`Ahora mismo tienes <b>${av.length}</b> abierto(s) por <span class="num">${fmt(sumImp(av))}</span>.`:'Ahora mismo no tienes ninguno abierto.'}`;}},
  {k:['beneficio','10','porcentaje','apartar','bote de altillo','ficha'],min:1,f:()=>{
    const f=fondoBeneficio(), p=beneficioPendiente();
-   return `De <b>cada ingreso</b> se aparta el <b>${pctBenef()}%</b> para Altillo. Cada ingreso genera su <b>ficha</b> en la sección “Beneficio ${pctBenef()}%”, y esa ficha no desaparece hasta que ese dinero está dentro de la caja.<br><br>
-    Llevas <span class="num">${fmt(f)}</span> apartados y te faltan <span class="num">${fmt(p)}</span>.<br>
+   return `De <b>cada ingreso</b> se aparta el <b>${pctBenef()}%</b> para Altillo, y se hace <b>solo, sin botones</b>, en cuanto registras el ingreso con destino "en la caja" o "en el banco".<br><br>
+    Solo se queda como <b>ficha abierta</b> en “Beneficio ${pctBenef()}%” cuando el dinero sigue en el bolsillo de alguien: ahí sí hay algo físico que colocar.<br><br>
+    Llevas <span class="num">${fmt(f)}</span> apartados y hay <span class="num">${fmt(p)}</span> sin colocar todavía.<br>
     El porcentaje se cambia en <b>Datos & Backup ▸ Beneficio de Altillo</b>.`;}},
  {k:['debe','deben','deuda','altillo','quien debe'],min:1,f:()=>{
    const d=personaStats('David'), a=personaStats('Ariana');
-   return `<b>David</b> debe a Altillo <span class="num">${fmt(d.debe)}</span>${d.debe>0?` (${fmt(d.debeBolsillo)} sin meter en caja + ${fmt(d.debe10)} del ${pctBenef()}%)`:''}.<br>
-     <b>Ariana</b> debe a Altillo <span class="num">${fmt(a.debe)}</span>${a.debe>0?` (${fmt(a.debeBolsillo)} sin meter en caja + ${fmt(a.debe10)} del ${pctBenef()}%)`:''}.<br><br>
+   return `<b>David</b> debe a Altillo <span class="num">${fmt(d.debe)}</span>.<br>
+     <b>Ariana</b> debe a Altillo <span class="num">${fmt(a.debe)}</span>.<br><br>
+     Eso es solo el dinero que cada uno tiene todavía en el bolsillo sin colocar (ya incluye su ${pctBenef()}%) — lo que ya está en la caja o el banco no cuenta como deuda porque su ${pctBenef()}% ya se ha apartado solo.<br>
      Lo tienes desglosado en la sección <b>David & Ariana</b>.`;}},
  {k:['apuntar','apunto','registrar','anotar','meter','como se','bolo','ingreso'],min:2,f:()=>
    `Para apuntar un <b>bolo</b>:<ul>
      <li>Botón dorado <b>Añadir movimiento</b> ▸ tipo <b>Ingreso</b>.</li>
      <li>Importe total que os han pagado y el concepto (ej. “Bolo Sala Villanos”).</li>
      <li>Quién lo cobró y, muy importante, <b>dónde está ese dinero</b>: en la caja, en el banco o encima de esa persona.</li>
-    </ul>Al guardar se crea sola la ficha del ${pctBenef()}% para el bote. Los cachés se apuntan aparte, como tipo <b>Caché</b>.`},
+    </ul>Si eliges caja o banco, el ${pctBenef()}% se aparta <b>solo</b> al guardar, sin nada más que hacer. Si eliges "en el bolsillo de alguien", queda una ficha abierta hasta que lo coloquéis. Los cachés se apuntan aparte, como tipo <b>Caché</b>.`},
  {k:['sacar','saco','sacamos','quitar','retirar','gastar de la caja','salida'],min:1,f:()=>
    `Para <b>sacar dinero de la caja</b>: <b>Pá la Caja ▸ Sacar dinero de la caja</b> (o Añadir movimiento ▸ <b>Pá la Caja</b> y elige “Sacar de la caja”). El importe se guarda en negativo y el saldo baja.<br>
     Si el dinero sale de la caja para pagar un gasto concreto, mejor apunta el <b>gasto</b> y en “¿De dónde salió el dinero?” elige <b>De la caja</b>: así no lo cuentas dos veces.`},
